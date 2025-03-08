@@ -1,19 +1,14 @@
 DEFINE ACCESS account ON DATABASE TYPE RECORD
-    TYPE JWT ALGORITHM HS256
-    KEY 'melteamo' WITH ISSUER KEY 'melteamo'
     SIGNUP (
         CREATE usuario
         SET
-            correo = $correo,
-            pass = crypto::argon2::generate($pass),
+            correo = $login_method,
+            pass = crypto::argon2::generate($pass)
     )
     SIGNIN (
-        SELECT * FROM usuario WHERE correo = $correo
+        SELECT * FROM usuario WHERE correo = $login_method OR username = $login_method
     )
-	DURATION FOR TOKEN 1h
 ;
-
-
 
 CREATE usuario SET 
     nombres = "Mel",
