@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
 const images = [
-  "public/assets/img/lp1.webp",
-  "public/assets/img/lp2.webp",
-  "public/assets/img/lp3.webp",
+  "/assets/img/lp1.webp",
+  "/assets/img/lp2.webp",
+  "/assets/img/lp3.webp",
 ];
 
 export default function AutoCarousel() {
