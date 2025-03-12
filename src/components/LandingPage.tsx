@@ -23,7 +23,7 @@ function LandingPage() {
             <p className='text-3xl font-bold'>MIXIT</p>
             </a>
             <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-            <button type="button" className="text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-2 text-center flex flex-row justify-center items-center">MIXI <img src="src\assets\svg\hook.svg" alt="" className='w-10 pl-2'/></button>
+            <button type="button" className="text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-2 text-center flex flex-row justify-center items-center">MIXI <img src="public\assets\svg\hook.svg" alt="" className='w-10 pl-2'/></button>
             <button data-collapse-toggle="navbar-cta" type="button" className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="navbar-cta" aria-expanded="false">
                 <span className="sr-only">Open main menu</span>
                 <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
