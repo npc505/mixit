@@ -47,7 +47,7 @@ function LandingPage() {
         </div>
         </nav>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 items-center justify-center p-24'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 p-24'>
             <div>
                 {phrases.map((text, index) => (
                         <motion.p
