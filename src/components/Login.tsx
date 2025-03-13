@@ -14,7 +14,7 @@ const Login = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setVideoOpacity("opacity-80");
-            setFormOpacity("opacity-100"); // Hace que el formulario aparezca después de 2 segundos
+            setFormOpacity("opacity-100");
         }, 2000);
 
         return () => clearTimeout(timer);
@@ -38,8 +38,8 @@ const Login = () => {
                     </video>
                 </div>
 
-            <div className={`flex justify-center items-center transition-opacity duration-1000 h-screen ${formOpacity}`}>
-                <div className="p-8 rounded-xl max-w-sm w-full mt-20 md:mt-8 lg:mt-8">
+            <div className={`flex justify-center items-center transition-opacity duration-1000 ${formOpacity}`}>
+                <div className="p-8 rounded-xl max-w-sm w-full mt-34 md:mt-8 lg:mt-8">
                     <p className="text-5xl text-black md:text-white lg:text-white font-bold text-center">Log In</p>
                     <div className="my-5">
                     <label className="block mb-2 text-md font-medium text-black md:text-white lg:text-white">Username or email</label>
@@ -64,7 +64,7 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     </div>
-                    <div className="flex justify-center items-center flex-col">
+                    <div className="flex justify-center items-center flex-col pt-2">
                         <button onClick={async () => {await login(await getDb(),username,password); }}
                         type="submit" 
                         className="text-white bg-black hover:bg-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-8 py-2.5 text-center"
@@ -90,7 +90,7 @@ const Login = () => {
                 </div>
             </div>
             </div>
-        <Footer />
+        <div className="pt-40"><Footer /></div>
     </div>
     );
 };
