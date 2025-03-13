@@ -22,12 +22,12 @@ const Login = () => {
 
 
     return (
-    <div>
+    <div className="relative min-h-screen flex flex-col">
         <div className="relative w-full">
             <Navbar />
         </div>
-            <div className="grid grid-cols-1 justify-center items-center">
-                <div className="absolute top-0 left-0 w-full -z-10 bg-black">
+            <div className="flex-grow grid grid-cols-1 justify-center items-center">
+                <div className="absolute top-0 left-0 w-full h-full -z-10 bg-black">
                     <video 
                         autoPlay 
                         loop 
@@ -39,22 +39,22 @@ const Login = () => {
                 </div>
 
             <div className={`flex justify-center items-center transition-opacity duration-1000 ${formOpacity}`}>
-                <div className="p-8 rounded-xl max-w-sm w-full mt-34 md:mt-8 lg:mt-8">
-                    <p className="text-5xl text-black md:text-white lg:text-white font-bold text-center">Log In</p>
+                <div className="p-8 rounded-xl max-w-sm w-full">
+                    <p className="text-5xl text-white font-bold text-center">Log In</p>
                     <div className="my-5">
-                    <label className="block mb-2 text-md font-medium text-black md:text-white lg:text-white">Username or email</label>
+                    <label className="block mb-2 text-md font-medium text-white">Username or email</label>
                     <input 
                         type="username" 
                         id="username" 
                         value={username}
-                        className="border-2 border-gray-300 text-black md:text-white lg:-text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
+                        className="border-2 border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
                         placeholder="username" 
                         required 
                         onChange={(e) => setUsername(e.target.value)}
                     />
                     </div>
                     <div className="my-5">
-                    <label className="block mb-2 text-md font-medium text-black md:text-white lg:text-white">Password</label>
+                    <label className="block mb-2 text-md font-medium text-white">Password</label>
                     <input 
                         type="password" 
                         id="password" 
@@ -90,7 +90,7 @@ const Login = () => {
                 </div>
             </div>
             </div>
-        <div className="pt-40"><Footer /></div>
+        <div className="mt-auto"><Footer /></div>
     </div>
     );
 };
