@@ -1,7 +1,7 @@
 import './App.css'
-import LandingPage from './components/LandingPage'
-import Login from './components/Login'
-import Register from './components/Register'
+import LandingPage from './views/LandingPage'
+import Login from './views/Login'
+import Register from './views/Register'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 
