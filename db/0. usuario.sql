@@ -14,7 +14,8 @@ DEFINE FIELD id ON usuario TYPE record<usuario>
         FOR select FULL
 ;
 
-DEFINE FIELD pass ON TABLE usuario PERMISSIONS FOR select NONE;
+DEFINE FIELD pass ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
+DEFINE FIELD sub ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
 DEFINE FIELD username ON TABLE usuario TYPE string
     ASSERT
         $value != None AND string::len($value) > 5
