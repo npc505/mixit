@@ -3,9 +3,33 @@ import Navbar from '../components/Navbar'
 import Gallery from '../components/Gallery'
 import Footer from '../components/Footer'
 import { Surreal } from "../surreal";
-import { register } from "../surreal/auth";
+import { handleGoogleCallback, handleGoogleSignIn, loadGoogleScript, register } from "../surreal/auth";
+import { useEffect } from "react";
+
+
+declare global {
+    interface Window {
+        google?: any;
+    }
+}
 
 function Register(props: {db: Surreal | undefined}) {
+    if (props.db !== undefined) {
+        useEffect(() => {
+        
+            loadGoogleScript(() => {
+                if (window.google) {
+                    window.google.accounts.id.initialize({
+                        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                        callback: async (res: any) => {
+                            await handleGoogleCallback(res, props.db)
+                        }
+                    });
+                }
+            });
+        }, []);
+    
+    }
 
     return (
         <div>
@@ -48,7 +72,7 @@ function Register(props: {db: Surreal | undefined}) {
                             <div className="flex flex-row justify-center items-center gap-4">
                                 <button className="flex flex-row justify-center items-center gap-2 rounded-full border-2 border-white px-8 py-2 bg-gray-100">
                                     <FcGoogle style={{ width: "30px", height: "30px" }} />
-                                    <p className="text-black">Google</p>
+                                    <p className="text-black" onClick={handleGoogleSignIn}>Google</p>
                                 </button>
                             </div>
                         </div>

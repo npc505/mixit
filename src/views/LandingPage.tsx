@@ -38,7 +38,7 @@ function LandingPage() {
                         </motion.p>
                     ))}
                     <p className='text-5xl md:text-7xl lg:text-7xl text-gray-900 font-bold font-poppins'>Mix It</p>
-                    <p className='text-2xl md:text-5xl lg:text-5xl text-gray-900 font-bold font-poppins pt-6'>Unleash your best fashion combinations</p>
+                    <p className='text-2xl md:text-5xl lg:text-5xl text-gray-900 font-bold font-poppins pt-6'>Unleash your best fashion combinations {import.meta.env.VITE_MY_SECRET}</p>
                     <div className="pt-12 flex flex-col md:flex-row lg:flex-row gap-4">
                         <button type="button" className="text-white border-2 border-solid-black bg-black hover:bg-white hover:text-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-lg px-8 py-2 text-center" onClick={handleRegister}>Register</button>
                         <button type="button" className="text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-lg px-8 py-2 text-center"  onClick={handleLogin}>Log In</button>
