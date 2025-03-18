@@ -6,7 +6,6 @@ import Login from './views/Login'
 import Register from './views/Register'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-
 function App() {
   let [client, setClient] = useState<Surreal>();
 

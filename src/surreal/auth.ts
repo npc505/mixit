@@ -20,7 +20,7 @@ export async function login(db: Surreal, username: string, password: string): Pr
   }
 
 interface GoogleOauth {
-  username: string,
+  email: string,
   sub: string
 }
 
@@ -31,7 +31,7 @@ interface OwnAuth {
 }
 
 function instanceOfGoogleOauth(object: any): object is GoogleOauth {
-    return 'sub' in object && 'username' in object;
+    return 'sub' in object && 'email' in object;
 }
 
 export async function register(db: Surreal, credentials: GoogleOauth | OwnAuth): Promise<void> {
@@ -43,7 +43,7 @@ export async function register(db: Surreal, credentials: GoogleOauth | OwnAuth):
           namespace: 'mixit',
           database: 'mixit',
           variables: {
-            username: credentials.username,
+            email: credentials.email,
             sub: credentials.sub,
           },
       });
@@ -68,3 +68,71 @@ export async function register(db: Surreal, credentials: GoogleOauth | OwnAuth):
       console.error("Failed", err instanceof Error ? err.message : String(err));
   }
 }
+
+// Load the Google API script
+export function loadGoogleScript(onLoad: (this: GlobalEventHandlers, ev: Event) => any) {
+    // Remove any existing script to avoid duplicates
+    const existingScript = document.getElementById('google-auth-script');
+    if (existingScript) {
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.id = 'google-auth-script';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = onLoad;
+}
+    
+    
+// Function to handle Google sign-in response
+export async function handleGoogleCallback(response: any, db: Surreal | undefined) {
+    try {
+        // Decode the JWT token to get user info
+        const payload = decodeJwtResponse(response.credential);
+        console.log("Google Sign In successful");
+
+        // Extract the Google ID and email
+        const googleId = payload.sub; // Google's unique identifier for the user
+        const userEmail = payload.email;
+
+        console.log("Google ID:", googleId);
+        console.log("Email:", userEmail);
+
+        // Save the user to your database
+        if (db != undefined) {
+          await register(db, {
+            sub: googleId,
+            email: userEmail
+          })
+        }
+
+        // Redirect or show success message
+    } catch (error) {
+        console.error("Google sign-in error:", error);
+    /* setErrorMessage */ console.log("Google sign-in failed. Please try again.");
+    }
+}
+
+// Helper function to decode the JWT token
+function decodeJwtResponse(token: string) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+    
+// Function to trigger Google sign-in
+export function handleGoogleSignIn() {
+    if (window.google && window.google.accounts.id) {
+        window.google.accounts.id.prompt();
+    } else {
+        console.error("Google API not loaded yet");
+    /* setErrorMessage */ console.log("Google sign-in not available. Please try again later.");
+    }
+}    
