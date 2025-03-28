@@ -1,12 +1,11 @@
 import { Surreal, login } from "../surreal";
 import { useState, useEffect } from "react";
-import { FcGoogle } from "react-icons/fc";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
   handleGoogleCallback,
-  handleGoogleSignIn,
   loadGoogleScript,
+  Method,
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 
@@ -30,8 +29,8 @@ function Login(props: { db: Surreal | undefined }) {
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (res: any) => {
-            await handleGoogleCallback(res, props.db);
+          callback: async (res: unknown) => {
+            await handleGoogleCallback(res, props.db, Method.Login);
           },
         });
       }
@@ -91,7 +90,10 @@ function Login(props: { db: Surreal | undefined }) {
               <button
                 onClick={async () => {
                   if (props.db != undefined) {
-                    await login(props.db, username, password);
+                    await login(props.db, {
+                      username: username,
+                      password: password,
+                    });
                   }
                 }}
                 type="submit"

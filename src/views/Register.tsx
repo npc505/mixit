@@ -1,4 +1,3 @@
-import { FcGoogle } from "react-icons/fc";
 import Navbar from "../components/Navbar";
 import Gallery from "../components/Gallery";
 import Footer from "../components/Footer";
@@ -6,17 +5,11 @@ import { Surreal } from "../surreal";
 import { useState } from "react";
 import {
   handleGoogleCallback,
-  handleGoogleSignIn,
   loadGoogleScript,
+  Method,
   register,
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
-
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
 
 function Register(props: { db: Surreal | undefined }) {
   const [email, setEmail] = useState("");
@@ -29,8 +22,8 @@ function Register(props: { db: Surreal | undefined }) {
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (res: any) => {
-            await handleGoogleCallback(res, props.db);
+          callback: async (res: unknown) => {
+            await handleGoogleCallback(res, props.db, Method.Register);
           },
         });
       }
