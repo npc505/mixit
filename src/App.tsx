@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css'
+import Details from './views/Details';
 import { getDb, Surreal } from './surreal';
 import LandingPage from './views/LandingPage'
 import Login from './views/Login'
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login db={client}/>} />
         <Route path="/register" element={<Register db={client}/>} />
+        <Route path="/details" element={<Details />} />
       </Routes>
     </Router>
     </>

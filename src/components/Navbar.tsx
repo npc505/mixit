@@ -67,6 +67,8 @@ const Navbar = () => {
                 My Closet
               </a>
             </li>
+
+            
           </ul>
         </div>
       </div>
