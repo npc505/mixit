@@ -10,6 +10,7 @@ import {
   loadGoogleScript,
   register,
 } from "../surreal/auth";
+import GoogleAuth from "../components/GoogleAuth";
 
 declare global {
   interface Window {
@@ -126,15 +127,7 @@ function Register(props: { db: Surreal | undefined }) {
                 </span>
                 <div className="w-28 md:w-60 lg:w-60 border-t border-gray-300"></div>
               </div>
-
-              <div className="flex flex-row justify-center items-center gap-4">
-                <button className="flex flex-row justify-center items-center gap-2 rounded-full border-2 border-white px-8 py-2 bg-gray-100">
-                  <FcGoogle style={{ width: "30px", height: "30px" }} />
-                  <p className="text-black" onClick={handleGoogleSignIn}>
-                    Google
-                  </p>
-                </button>
-              </div>
+              <GoogleAuth />
             </div>
           </div>
           <div className="flex justify-center">
