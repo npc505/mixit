@@ -4,8 +4,10 @@ export default function Avatar() {
     return (
       <img
         className="avatar"
+
         src={avatar}
         alt={description}
+        
         style={{
           width: '100px',
           height: '100px',
