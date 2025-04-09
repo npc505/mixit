@@ -27,6 +27,7 @@ function App() {
           <Route path="/login" element={<Login db={client} />} />
           <Route path="/register" element={<Register db={client} />} />
           <Route path="/details" element={<Details />} />
+          <Route path="/moodboard" element={<Moodboard />} />
         </Routes>
       </Router>
     </>
