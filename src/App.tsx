@@ -5,6 +5,7 @@ import { getDb, Surreal } from "./surreal";
 import LandingPage from "./views/LandingPage";
 import Login from "./views/Login";
 import Register from "./views/Register";
+import Moodboard from "./views/Moodboard";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {

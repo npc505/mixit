@@ -23,7 +23,8 @@ export async function login(
         },
       });
 
-      console.log("si existe por google", token);
+      // console.log("si existe por google", token);
+      document.cookie = `jwt=${token}; path=/`;
     } else {
       const token = await db.signin({
         access: "account",
@@ -35,7 +36,8 @@ export async function login(
         },
       });
 
-      console.log("si existe por propio", token);
+      // console.log("si existe por propio", token);
+      document.cookie = `jwt=${token}; path=/`;
     }
   } catch (err: unknown) {
     console.error("Failed", err instanceof Error ? err.message : String(err));
@@ -80,7 +82,8 @@ export async function register(
         },
       });
 
-      console.log("ahora existe", token);
+      // console.log("ahora existe", token);
+      document.cookie = `jwt=${token}; path=/`;
     } else {
       console.log("Register with Email");
       const token = await db.signup({
@@ -94,7 +97,8 @@ export async function register(
         },
       });
 
-      console.log("ahora existe", token);
+      // console.log("ahora existe", token);
+      document.cookie = `jwt=${token}; path=/`;
     }
   } catch (err: unknown) {
     console.error("Failed", err instanceof Error ? err.message : String(err));
@@ -143,8 +147,8 @@ export async function handleGoogleCallback(
     const googleId = payload.sub; // Google's unique identifier for the user
     const userEmail = payload.email;
 
-    console.log("Google ID:", googleId);
-    console.log("Email:", userEmail);
+    // console.log("Google ID:", googleId);
+    // console.log("Email:", userEmail);
 
     // Save the user to your database
     if (db != undefined) {
