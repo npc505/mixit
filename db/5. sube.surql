@@ -14,3 +14,8 @@ DEFINE FIELD date ON sube TYPE datetime READONLY
         FOR select WHERE in = $auth.id OR out.public = true
         FOR create WHERE in = $auth.id
 ;
+
+REMOVE INDEX IF EXISTS unique_sube ON sube;
+DEFINE INDEX unique_sube
+    ON TABLE sube
+    COLUMNS in, out UNIQUE;

@@ -14,3 +14,8 @@ DEFINE FIELD date ON tag_prenda TYPE datetime READONLY
         FOR select WHERE in.owner = $auth.id OR in.public = true
         FOR create, delete, update WHERE in.owner = $auth.id
 ;
+
+REMOVE INDEX IF EXISTS unique_tag_prenda ON tag_prenda;
+DEFINE INDEX unique_tag_prenda
+    ON TABLE tag_prenda
+    COLUMNS in, out UNIQUE;

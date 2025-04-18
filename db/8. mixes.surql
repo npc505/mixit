@@ -14,3 +14,8 @@ DEFINE FIELD date ON mixes TYPE datetime READONLY
         FOR select WHERE out.owner = $auth.id OR out.public = true
         FOR create, delete, update WHERE out.owner = $auth.id
 ;
+
+REMOVE INDEX IF EXISTS unique_mixes ON mixes;
+DEFINE INDEX unique_mixes
+    ON TABLE mixes
+    COLUMNS in, out UNIQUE;

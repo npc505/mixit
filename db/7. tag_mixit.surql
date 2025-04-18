@@ -14,3 +14,8 @@ DEFINE FIELD date ON tag_mixit TYPE datetime READONLY
         FOR select WHERE in.owner = $auth.id OR in.public = true
         FOR create, delete, update WHERE in.owner = $auth.id
 ;
+
+REMOVE INDEX IF EXISTS unique_tag_mixit ON tag_mixit;
+DEFINE INDEX unique_tag_mixit
+    ON TABLE tag_mixit
+    COLUMNS in, out UNIQUE;
