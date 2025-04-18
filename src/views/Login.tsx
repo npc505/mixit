@@ -1,5 +1,5 @@
-import { Surreal, login } from "../surreal";
-import { useState, useEffect } from "react";
+import { DbContext, login } from "../surreal";
+import { useState, useEffect, useContext } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
@@ -9,11 +9,12 @@ import {
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 
-function Login(props: { db: Surreal | undefined }) {
+function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [videoOpacity, setVideoOpacity] = useState("opacity-100");
   const [formOpacity, setFormOpacity] = useState("opacity-0");
+  const db = useContext(DbContext);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,13 +25,13 @@ function Login(props: { db: Surreal | undefined }) {
     return () => clearTimeout(timer);
   }, []);
 
-  if (props.db !== undefined) {
+  if (db !== undefined) {
     loadGoogleScript(() => {
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: async (res: unknown) => {
-            await handleGoogleCallback(res, props.db, Method.Login);
+            await handleGoogleCallback(res, db, Method.Login);
           },
         });
       }
@@ -89,8 +90,8 @@ function Login(props: { db: Surreal | undefined }) {
             <div className="flex justify-center items-center flex-col pt-2">
               <button
                 onClick={async () => {
-                  if (props.db != undefined) {
-                    await login(props.db, {
+                  if (db != undefined) {
+                    await login(db, {
                       username: username,
                       password: password,
                     });

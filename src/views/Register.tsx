@@ -1,8 +1,8 @@
 import Navbar from "../components/Navbar";
 import Gallery from "../components/Gallery";
 import Footer from "../components/Footer";
-import { Surreal } from "../surreal";
-import { useState } from "react";
+import { DbContext } from "../surreal";
+import { useContext, useState } from "react";
 import {
   handleGoogleCallback,
   loadGoogleScript,
@@ -11,19 +11,20 @@ import {
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 
-function Register(props: { db: Surreal | undefined }) {
+function Register() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const db = useContext(DbContext);
 
-  if (props.db !== undefined) {
+  if (db !== undefined) {
     loadGoogleScript(() => {
       if (window.google) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: async (res: unknown) => {
-            await handleGoogleCallback(res, props.db, Method.Register);
+            await handleGoogleCallback(res, db, Method.Register);
           },
         });
       }
@@ -101,8 +102,8 @@ function Register(props: { db: Surreal | undefined }) {
               <button
                 className="bg-black text-lg text-white rounded-full py-2 px-12"
                 onClick={async () => {
-                  if (props.db != undefined) {
-                    await register(props.db, {
+                  if (db != undefined) {
+                    await register(db, {
                       username,
                       email,
                       password,

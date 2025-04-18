@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import Navbar from '../components/Navbar';
+import { useState } from "react";
+import Navbar from "../components/Navbar";
 
 function Moodboard() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -7,14 +7,12 @@ function Moodboard() {
   const images = [
     "public/assets/img/gallery/hover1.png",
     "public/assets/img/gallery/hover2.png",
-    "public/assets/img/gallery/hover3.png"
+    "public/assets/img/gallery/hover3.png",
   ];
 
- 
   const openFullscreen = (imgSrc: string) => {
     setSelectedImage(imgSrc);
   };
-
 
   const closeFullscreen = () => {
     setSelectedImage(null);
@@ -58,7 +56,7 @@ function Moodboard() {
           >
             <img
               src={imgSrc}
-              alt={`hook${index+1}`}
+              alt={`hook${index + 1}`}
               className="w-full h-full object-cover rounded-lg"
             />
           </div>
@@ -68,7 +66,6 @@ function Moodboard() {
         </div>
       </div>
 
-   
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black/[0.6] flex items-center justify-center z-50 backdrop-blur-md"
