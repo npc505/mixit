@@ -20,3 +20,15 @@ DEFINE FIELD public ON mixit TYPE bool DEFAULT false
         FOR select WHERE public = true OR owner = $auth.id
         FOR create, update, delete WHERE owner = $auth.id
 ;
+
+DEFINE FIELD description ON mixit TYPE string
+    PERMISSIONS
+        FOR select WHERE public = true OR owner = $auth.id
+        FOR create, update, delete WHERE owner = $auth.id
+;
+
+DEFINE FIELD hooks ON mixit TYPE number READONLY
+    PERMISSIONS
+        FOR select WHERE public = true OR owner = $auth.id
+        FOR create, update, delete NONE
+;
