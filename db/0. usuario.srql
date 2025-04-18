@@ -1,4 +1,5 @@
-DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL 
+REMOVE TABLE IF EXISTS usuario;
+DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
     PERMISSIONS
         FOR select FULL
         FOR create, update WHERE id = $auth.id
@@ -6,16 +7,16 @@ DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
 
 -- ------------------------------
 -- FIELDS
--- ------------------------------ 
+-- ------------------------------
 
-DEFINE FIELD id ON usuario TYPE record<usuario>
-    PERMISSIONS 
+DEFINE FIELD id ON usuario TYPE record<usuario> READONLY
+    PERMISSIONS
         FOR create, update NONE
         FOR select FULL
 ;
 
 DEFINE FIELD pass ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
-DEFINE FIELD sub ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
+DEFINE FIELD sub ON TABLE usuario TYPE option<string> READONLY PERMISSIONS FOR select NONE;
 DEFINE FIELD username ON TABLE usuario TYPE string
     ASSERT
         $value != None AND string::len($value) > 5
@@ -24,9 +25,9 @@ DEFINE FIELD username ON TABLE usuario TYPE string
 DEFINE FIELD nombres ON usuario TYPE option<string>;
 DEFINE FIELD apellidos ON usuario TYPE option<string>;
 DEFINE FIELD correo ON usuario TYPE string
-    PERMISSIONS 
+    PERMISSIONS
         FOR select WHERE id = $auth.id
-    ASSERT 
+    ASSERT
         $value != None AND string::is::email($value)
 ;
 
@@ -34,7 +35,10 @@ DEFINE FIELD profile_picture ON usuario TYPE option<string> PERMISSIONS FULL;
 
 -- ------------------------------
 -- INDEXES
--- ------------------------------ 
+-- ------------------------------
 
+
+REMOVE INDEX IF EXISTS username_idx ON usuario;
+REMOVE INDEX IF EXISTS correo_idx ON usuario;
 DEFINE INDEX username_idx ON usuario FIELDS username UNIQUE;
 DEFINE INDEX correo_idx ON usuario FIELDS correo UNIQUE;
