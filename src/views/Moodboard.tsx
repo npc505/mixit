@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
 
 function Moodboard() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -20,10 +19,7 @@ function Moodboard() {
 
   return (
     <div className="relative">
-      <Navbar />
-      <p className="text-4xl font-bold text-left font-poppins mt-8 mb-8 pl-4">
-        Moodboard
-      </p>
+      <p className="text-4xl font-bold text-left font-poppins p-4">Moodboard</p>
       <div className="flex items-center gap-2 mb-4 pl-4">
         <div className="relative w-72 border border-gray-300 rounded-lg overflow-hidden">
           <div className="flex items-center pl-6 pr-4 py-2">

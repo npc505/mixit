@@ -1,14 +1,9 @@
 import Avatar from "../components/Avatar";
-import Navbar from "../components/Navbar";
 
 function Details() {
   return (
     <div>
-      <Navbar />
-
-      <p className="text-4xl font-bold text-left font-poppins mt-8 mb-8 pl-4">
-        My Hooks
-      </p>
+      <p className="text-4xl font-bold text-left font-poppins p-4">My Hooks</p>
 
       <div className="grid grid-cols-2 gap-4 p-10 bg-white rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_-4px_6px_-1px_rgba(0,0,0,0.1)] max-w-7xl mx-auto ">
         <div className="grid gap-4 p-4 bg-white rounded-lg shadow-md mx-auto max-w-sm">
