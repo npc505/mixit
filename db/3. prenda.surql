@@ -21,15 +21,7 @@ DEFINE FIELD image_url ON prenda TYPE string
         FOR create, update, delete WHERE owner = $auth.id
 ;
 
--- Tipos de prenda:
--- - None
--- - top
--- - bot
--- - full
--- - foot
--- - bag
--- - accessory
-DEFINE FIELD tipo ON prenda TYPE option<string>
+DEFINE FIELD tipo ON prenda TYPE "top" | "bot" | "full" | "foot" | "bag" | "accessory"
     PERMISSIONS
         FOR select WHERE public = true OR owner = $auth.id
         FOR create, update, delete WHERE owner = $auth.id
