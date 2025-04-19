@@ -5,6 +5,7 @@ DEFINE FUNCTION fn::create_prenda($image_url: string, $tipo: "top" | "bot" | "fu
         public: IF $public == None { false } ELSE { $public },
         owner: $auth.id,
         tipo: $tipo,
+        tags: [],
     };
 
     RELATE ($auth.id)->sube->($new_prenda.id) CONTENT {
@@ -16,16 +17,27 @@ DEFINE FUNCTION fn::create_prenda($image_url: string, $tipo: "top" | "bot" | "fu
 
 REMOVE FUNCTION IF EXISTS fn::tag_prenda;
 DEFINE FUNCTION fn::tag_prenda($prenda: record<prenda>, $tag_str: string) {
+    -- Try to look for existing tags
     LET $tag = SELECT *, search::score(1) AS score FROM ONLY tag WHERE nombre @1@ $tag_str ORDER BY score DESC LIMIT 1;
 
     LET $ftag = IF $tag == none {
+        -- Otherwise create a new tag to relate to
         LET $new_tag = CREATE tag CONTENT { nombre: $tag_str };
         $new_tag
     } ELSE {
         $tag
     };
 
-    RETURN RELATE $prenda->tag_prenda->($ftag.id) CONTENT {
+    -- Create the relation
+    LET $relation = RELATE $prenda->tag_prenda->$ftag CONTENT {
         date: time::now(),
     };
+
+    -- If the relation succeeds update ref count and prenda's tags
+    UPDATE $prenda.id SET
+        tags += $ftag.id;
+
+    UPDATE $ftag.id SET refs += 1;
+
+    RETURN $relation;
 };

@@ -7,6 +7,16 @@ DEFINE TABLE tag TYPE NORMAL SCHEMAFULL
 
 DEFINE FIELD nombre ON TABLE tag TYPE string;
 
+DEFINE FIELD refs ON TABLE tag VALUE <future> {
+    LET $res = (SELECT COUNT(<-tag_prenda) FROM ONLY $this).count;
+
+    IF $res == None {
+        RETURN 0;
+    } ELSE {
+        RETURN $res;
+    }
+};
+
 REMOVE ANALYZER IF EXISTS my_analyzer;
 DEFINE ANALYZER my_analyzer
   TOKENIZERS class

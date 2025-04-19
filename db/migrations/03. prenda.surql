@@ -15,6 +15,12 @@ DEFINE FIELD owner ON prenda TYPE record<usuario> READONLY
         FOR create, update, delete WHERE owner = $auth.id
 ;
 
+DEFINE FIELD tags ON prenda TYPE set<record<tag>> DEFAULT ALWAYS <set>[]
+    PERMISSIONS
+        FOR select WHERE public = true OR owner = $auth.id
+        FOR create, delete, update WHERE public = true OR owner = $auth.id
+;
+
 DEFINE FIELD image_url ON prenda TYPE string
     PERMISSIONS
         FOR select WHERE public = true OR owner = $auth.id
