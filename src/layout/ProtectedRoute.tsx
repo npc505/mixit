@@ -11,28 +11,33 @@ function ProtectedRoute() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = Cookies.get("jwt");
+      let authenticated = false;
 
-      // Pass the token to authenticate method
       if (token !== undefined) {
-        await (db.authenticate(token as Token), db.info());
-        const res = await db.info();
-        if (res !== undefined) {
-          // When res is not undefined it means the client was able to select the users info (which is the minimum required) and thus the session is ready :D
-          setIsAuthenticated(true);
+        try {
+          await db.authenticate(token as Token);
+          const res = await db.info();
+          if (res?.id !== undefined && res?.id !== null) {
+            // When res is not undefined it means the client was able to select the users info (which is the minimum required) and thus the session is ready :D
+            authenticated = true;
+          }
+        } catch (error) {
+          console.error("Authentication error:", error);
         }
       }
-      setIsAuthenticated(false);
+
+      setIsAuthenticated(authenticated);
     };
 
     checkAuth();
-  });
+  }, [db]);
 
   if (isAuthenticated === null) {
     /* TODO: Loading thingy */
     return <div></div>;
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
+  return isAuthenticated === true ? <Outlet /> : <Navigate to="/login" />;
 }
 
 export default ProtectedRoute;

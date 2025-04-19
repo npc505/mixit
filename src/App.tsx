@@ -11,9 +11,10 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import MyCloset from "./views/Profile";
 import ProtectedRoute from "./layout/ProtectedRoute";
+import { ConnectionStatus } from "surrealdb";
 
 function App() {
-  const [client, setClient] = useState<Surreal | undefined>();
+  const [client, setClient] = useState<Surreal | undefined>(undefined);
 
   useEffect(() => {
     const initDB = async () => {
@@ -24,7 +25,7 @@ function App() {
     initDB();
   }, []);
 
-  if (!client) {
+  if (client === undefined || client.status != ConnectionStatus.Connected) {
     return (
       <Router>
         <Routes>
