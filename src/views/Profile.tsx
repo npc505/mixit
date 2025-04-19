@@ -1,13 +1,16 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { DbContext } from "../surreal";
 import { RecordId } from "surrealdb";
+import uploadFile from "../files/upload";
 
 const MyCloset = () => {
   const db = useContext(DbContext);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [info, setInfo] = useState<
     undefined | { [x: string]: unknown; id: RecordId<string> }
   >();
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -25,6 +28,39 @@ const MyCloset = () => {
   if (info === undefined) {
     return <div>Error getting user info, try to reload</div>;
   }
+  const handleProfilePictureClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      const uploadedHash = await uploadFile(file);
+
+      if (uploadedHash) {
+        await db.query(
+          `UPDATE $auth.id SET profile_picture = "${uploadedHash}"`,
+        );
+        const updatedInfo = {
+          ...info,
+          profile_picture: uploadedHash,
+        };
+        setInfo(updatedInfo);
+      }
+    } catch (error) {
+      console.error("Error handling file change:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div>
@@ -42,15 +78,30 @@ const MyCloset = () => {
         }}
       >
         <div
-          className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden"
+          className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden cursor-pointer"
           style={{
+            // TODO: use and env var or something
             backgroundImage:
               typeof info.profile_picture === "string"
-                ? `url(${info.profile_picture})`
+                ? `url(http://localhost:1234/${info.profile_picture})`
                 : "none",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
+          onClick={handleProfilePictureClick}
+        >
+          {isUploading && (
+            <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-50">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+            </div>
+          )}
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+          accept="image/*"
         />
         <p className="mt-2 text-xl font-semibold">
           {typeof info.username === "string" ? info.username : "Username"}
