@@ -2,8 +2,10 @@ import { useContext, useEffect, useState, useRef } from "react";
 import { DbContext } from "../surreal";
 import { RecordId } from "surrealdb";
 import uploadFile from "../files/upload";
+import TabGrid from "../components/TabGrid";
 
 const MyCloset = () => {
+  const [activeTab, setActiveTab] = useState("all");
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +107,15 @@ const MyCloset = () => {
     }
   };
 
+  const tabs = [
+    { id: "all", label: "All" },
+    { id: "tops", label: "Tops" },
+    { id: "bottoms", label: "Bottoms" },
+    { id: "dresses", label: "Dresses" },
+    { id: "shoes", label: "Shoes" },
+    { id: "accessories", label: "Accessories" },
+  ];
+
   return (
     <div>
       <p className="text-4xl font-bold text-left font-poppins p-4">My Closet</p>
@@ -194,6 +205,13 @@ const MyCloset = () => {
             <span className="text-sm">In Hooks</span>
           </div>
         </div>
+      </div>
+      <div className="p-4 pt-10">
+        <TabGrid
+          tabs={tabs}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
 const Navbar = () => {
+  const currentPath =
+    typeof window !== "undefined" ? window.location.pathname : "";
+
   return (
     <nav className="bg-white border-gray-200">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-        <a href="#" className="flex items-center space-x-3 rtl:space-x-reverse">
+        <a href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
           <p className="text-3xl font-bold">MIXIT</p>
         </a>
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
@@ -45,8 +48,12 @@ const Navbar = () => {
             <li>
               <a
                 href="/"
-                className="block py-2 px-3 md:p-0 text-white bg-blue-700 rounded-sm md:bg-transparent md:text-gray-400"
-                aria-current="page"
+                className={`block py-2 px-3 md:p-0 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 ${
+                  currentPath === "/"
+                    ? "text-gray-400 md:text-gray-400"
+                    : "text-gray-900"
+                }`}
+                aria-current={currentPath === "/" ? "page" : undefined}
               >
                 Home
               </a>
@@ -54,7 +61,12 @@ const Navbar = () => {
             <li>
               <a
                 href="/explore"
-                className="block py-2 px-3 md:p-0 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700"
+                className={`block py-2 px-3 md:p-0 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 ${
+                  currentPath === "/explore"
+                    ? "text-gray-400 md:text-gray-400"
+                    : "text-gray-900"
+                }`}
+                aria-current={currentPath === "/explore" ? "page" : undefined}
               >
                 Explore
               </a>
@@ -62,7 +74,12 @@ const Navbar = () => {
             <li>
               <a
                 href="/closet"
-                className="block py-2 px-3 md:p-0 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700"
+                className={`block py-2 px-3 md:p-0 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 ${
+                  currentPath === "/closet"
+                    ? "text-gray-400 md:text-gray-400"
+                    : "text-gray-900"
+                }`}
+                aria-current={currentPath === "/closet" ? "page" : undefined}
               >
                 My Closet
               </a>
