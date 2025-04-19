@@ -5,12 +5,14 @@ import uploadFile from "../files/upload";
 
 const MyCloset = () => {
   const db = useContext(DbContext);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
   const [info, setInfo] = useState<
     undefined | { [x: string]: unknown; id: RecordId<string> }
   >();
   const [isUploading, setIsUploading] = useState(false);
+  const [isBannerUploading, setIsBannerUploading] = useState(false);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -28,9 +30,16 @@ const MyCloset = () => {
   if (info === undefined) {
     return <div>Error getting user info, try to reload</div>;
   }
+
   const handleProfilePictureClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+    if (profilePicture_fileInputRef.current) {
+      profilePicture_fileInputRef.current.click();
+    }
+  };
+
+  const handleBannerPictureClick = () => {
+    if (bannerImage_fileInputRef.current) {
+      bannerImage_fileInputRef.current.click();
     }
   };
 
@@ -62,6 +71,32 @@ const MyCloset = () => {
     }
   };
 
+  const handleBannerFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsBannerUploading(true);
+
+    try {
+      const uploadedHash = await uploadFile(file);
+
+      if (uploadedHash) {
+        await db.query(`UPDATE $auth.id SET back_picture = "${uploadedHash}"`);
+        const updatedInfo = {
+          ...info,
+          back_picture: uploadedHash,
+        };
+        setInfo(updatedInfo);
+      }
+    } catch (error) {
+      console.error("Error handling banner file change:", error);
+    } finally {
+      setIsBannerUploading(false);
+    }
+  };
+
   return (
     <div>
       <p className="text-4xl font-bold text-left font-poppins p-4">My Closet</p>
@@ -71,16 +106,34 @@ const MyCloset = () => {
           backgroundColor: "#FDCCE9",
           backgroundImage:
             typeof info.back_picture === "string" && info.back_picture !== ""
-              ? `url(${info.back_picture})`
+              ? `url(http://localhost:1234/${info.back_picture})`
               : "none",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
+        <span
+          className="absolute top-4 right-4 text-sm text-white px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10"
+          onClick={handleBannerPictureClick}
+        >
+          Edit
+        </span>
+        {isBannerUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+          </div>
+        )}
+        <input
+          type="file"
+          ref={bannerImage_fileInputRef}
+          onChange={handleBannerFileChange}
+          style={{ display: "none" }}
+          accept="image/*"
+        />
         <div
-          className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden cursor-pointer"
+          className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden cursor-pointer group relative"
           style={{
-            // TODO: use and env var or something
+            // TODO: use an env var or something
             backgroundImage:
               typeof info.profile_picture === "string"
                 ? `url(http://localhost:1234/${info.profile_picture})`
@@ -90,6 +143,11 @@ const MyCloset = () => {
           }}
           onClick={handleProfilePictureClick}
         >
+          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-50 flex items-center justify-center transition-opacity duration-300">
+            <span className="text-white font-medium border border-black">
+              Upload
+            </span>
+          </div>
           {isUploading && (
             <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-50">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
@@ -98,7 +156,7 @@ const MyCloset = () => {
         </div>
         <input
           type="file"
-          ref={fileInputRef}
+          ref={profilePicture_fileInputRef}
           onChange={handleFileChange}
           style={{ display: "none" }}
           accept="image/*"

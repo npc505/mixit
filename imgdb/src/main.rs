@@ -173,7 +173,7 @@ async fn save_img(
     use tokio::fs;
 
     let mut saved: Vec<String> = vec![];
-    let mut hash: Vec<String> = vec![];
+    let mut hashes: Vec<String> = vec![];
     let mut bytes: Vec<Bytes> = vec![];
 
     while let Some(field) = mp.next_field().await.unwrap() {
@@ -187,12 +187,12 @@ async fn save_img(
         let h = hasher.finalize();
         let h = base16ct::lower::encode_string(&h);
 
-        hash.push(h);
+        hashes.push(h);
         saved.push(name);
         bytes.push(data);
     }
 
-    for (hash, bytes) in hash.iter().zip(bytes) {
+    for (hash, bytes) in hashes.iter().zip(bytes) {
         let path: PathBuf = format!("{}/{}", state.db_path.display(), &hash).into();
 
         match fs::try_exists(&path).await {
@@ -220,10 +220,10 @@ async fn save_img(
             println!("Error: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
+        log::info!("New {hash:?}");
     }
 
-    log::info!("New {hash:?}");
-    Ok(Json(UploadResponse { hashes: hash }))
+    Ok(Json(UploadResponse { hashes }))
 }
 
 fn main() -> ExitCode {
