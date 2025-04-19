@@ -32,29 +32,38 @@ DEFINE FUNCTION fn::create_prenda($image_url: string, $tipo: "top" | "bot" | "fu
     RETURN $new_prenda;
 };
 
+REMOVE FUNCTION IF EXISTS fn::untag_prenda;
+DEFINE FUNCTION fn::untag_prenda($prenda: record<prenda>, $tag: record<tag>) {
+    LET $relation = DELETE $prenda->tag_prenda WHERE out=$tag RETURN BEFORE;
+
+    UPDATE $prenda.id SET
+        tags -= $tag.id;
+
+    RETURN $relation;
+};
+
 REMOVE FUNCTION IF EXISTS fn::tag_prenda;
-DEFINE FUNCTION fn::tag_prenda($prenda: record<prenda>, $tag_str: string) {
-    -- Try to look for existing tags
+DEFINE FUNCTION fn::tag_prenda($prenda: record<prenda>, $tag: record<tag>) {
+    LET $relation = RELATE $prenda->tag_prenda->$tag CONTENT {
+        date: time::now(),
+    };
+
+    UPDATE $prenda.id SET
+        tags += $tag.id;
+
+    RETURN $relation;
+};
+
+REMOVE FUNCTION IF EXISTS fn::tag_prenda_with_str;
+DEFINE FUNCTION fn::tag_prenda_with_str($prenda: record<prenda>, $tag_str: string) {
     LET $tag = SELECT *, search::score(1) AS score FROM ONLY tag WHERE nombre @1@ $tag_str ORDER BY score DESC LIMIT 1;
 
     LET $ftag = IF $tag == none {
-        -- Otherwise create a new tag to relate to
         LET $new_tag = CREATE tag CONTENT { nombre: $tag_str };
         $new_tag
     } ELSE {
         $tag
     };
 
-    -- Create the relation
-    LET $relation = RELATE $prenda->tag_prenda->$ftag CONTENT {
-        date: time::now(),
-    };
-
-    -- If the relation succeeds update ref count and prenda's tags
-    UPDATE $prenda.id SET
-        tags += $ftag.id;
-
-    UPDATE $ftag.id SET refs += 1;
-
-    RETURN $relation;
+    RETURN fn::tag_prenda($prenda, $ftag);
 };

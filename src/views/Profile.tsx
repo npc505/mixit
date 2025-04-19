@@ -34,7 +34,7 @@ const MyCloset = () => {
         style={{
           backgroundColor: "#FDCCE9",
           backgroundImage:
-            info.back_picture && info.back_picture !== ""
+            typeof info.back_picture === "string" && info.back_picture !== ""
               ? `url(${info.back_picture})`
               : "none",
           backgroundSize: "cover",
@@ -44,23 +44,28 @@ const MyCloset = () => {
         <div
           className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden"
           style={{
-            backgroundImage: info.profile_picture
-              ? `url(${info.profile_picture})`
-              : "none",
+            backgroundImage:
+              typeof info.profile_picture === "string"
+                ? `url(${info.profile_picture})`
+                : "none",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         />
         <p className="mt-2 text-xl font-semibold">
-          {info.username || "Username"}
+          {typeof info.username === "string" ? info.username : "Username"}
         </p>
         <div className="flex flex-row mt-4 space-x-6">
           <div className="flex flex-col items-center">
-            <span className="text-xl font-bold">{info.followers || 0}</span>
+            <span className="text-xl font-bold">
+              {typeof info.followers === "number" ? info.followers : 0}
+            </span>
             <span className="text-sm">Followers</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-xl font-bold">{info.following || 0}</span>
+            <span className="text-xl font-bold">
+              {typeof info.following === "number" ? info.following : 0}
+            </span>
             <span className="text-sm">Following</span>
           </div>
           <div className="flex flex-col items-center">
