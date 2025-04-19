@@ -1,3 +1,20 @@
+REMOVE FUNCTION IF EXISTS fn::search_by_username;
+DEFINE FUNCTION fn::search_by_username($username: string) {
+    RETURN SELECT VALUE id FROM ONLY usuario WHERE username == $username LIMIT 1;
+};
+
+REMOVE FUNCTION IF EXISTS fn::follow;
+DEFINE FUNCTION fn::follow($user: record<usuario>) {
+    RETURN RELATE ($auth.id)->follows->$user CONTENT {
+        date: time::now()
+    };
+};
+
+REMOVE FUNCTION IF EXISTS fn::unfollow;
+DEFINE FUNCTION fn::unfollow($user: record<usuario>) {
+    RETURN DELETE ($auth.id)->follows WHERE out=$user RETURN BEFORE;
+};
+
 REMOVE FUNCTION IF EXISTS fn::create_prenda;
 DEFINE FUNCTION fn::create_prenda($image_url: string, $tipo: "top" | "bot" | "full" | "foot" | "bag" | "accessory", $public: option<bool>) {
     LET $new_prenda = CREATE prenda CONTENT {

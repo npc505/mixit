@@ -15,6 +15,27 @@ DEFINE FIELD id ON usuario TYPE record<usuario> READONLY
         FOR select FULL
 ;
 
+DEFINE FIELD followers ON TABLE usuario VALUE <future> {
+    LET $res = (SELECT COUNT(<-follows) FROM ONLY $this).count;
+
+    IF $res == None {
+        RETURN 0;
+    } ELSE {
+        RETURN $res;
+    }
+};
+
+DEFINE FIELD following ON TABLE usuario VALUE <future> {
+    LET $res = (SELECT COUNT(->follows) FROM ONLY $this).count;
+
+    IF $res == None {
+        RETURN 0;
+    } ELSE {
+        RETURN $res;
+    }
+};
+
+
 DEFINE FIELD pass ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
 DEFINE FIELD sub ON TABLE usuario TYPE option<string> READONLY PERMISSIONS FOR select NONE;
 DEFINE FIELD username ON TABLE usuario TYPE string
