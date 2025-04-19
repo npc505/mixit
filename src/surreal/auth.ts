@@ -20,6 +20,8 @@ export async function login(
         variables: {
           email: credentials.email,
           sub: credentials.sub,
+          username: "",
+          password: "",
         },
       });
 
@@ -33,6 +35,8 @@ export async function login(
         variables: {
           username: credentials.username,
           password: credentials.password,
+          sub: "",
+          email: "",
         },
       });
 

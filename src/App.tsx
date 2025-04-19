@@ -13,38 +13,34 @@ import {
   Routes,
   Outlet,
   Navigate,
+  // Navigate,
 } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import MyCloset from "./views/Profile";
 import { Token } from "surrealdb";
+import Cookies from "js-cookie";
 
 function ProtectedRoute() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const db = useContext(DbContext);
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (db !== undefined) {
-        try {
-          // Read JWT cookie and pass it to authenticate method
-          const cookies = document.cookie.split(";");
-          const jwtCookie = cookies.find((cookie) =>
-            cookie.trim().startsWith("jwt="),
-          );
-          const token = jwtCookie ? jwtCookie.split("=")[1].trim() : null;
+      const token = Cookies.get("jwt");
+      console.log(token);
 
-          // Pass the token to authenticate method
-          if (token !== undefined) {
-            await (db.authenticate(token as Token), db.info());
-            const res = await db.info();
-            if (res !== undefined) {
-              setIsAuthenticated(true);
-            }
-          }
-        } catch (error) {
-          console.error("Authentication error:", error);
-          return false;
+      // Pass the token to authenticate method
+      if (token !== undefined) {
+        await (db.authenticate(token as Token), db.info());
+        const res = await db.info();
+        console.log(res);
+        if (res !== undefined) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
         }
+      } else {
+        setIsAuthenticated(false);
       }
     };
     checkAuth();
@@ -58,7 +54,7 @@ function ProtectedRoute() {
 }
 
 function App() {
-  const [client, setClient] = useState<Surreal>();
+  const [client, setClient] = useState<Surreal | undefined>();
 
   useEffect(() => {
     const initDB = async () => {
@@ -68,6 +64,10 @@ function App() {
 
     initDB();
   }, []);
+
+  if (!client) {
+    return;
+  }
 
   return (
     <DbContext.Provider value={client}>
