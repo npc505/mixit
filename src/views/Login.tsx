@@ -23,18 +23,16 @@ function Login() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (db !== undefined) {
-    loadGoogleScript(() => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (res: unknown) => {
-            await handleGoogleCallback(res, db, Method.Login);
-          },
-        });
-      }
-    });
-  }
+  loadGoogleScript(() => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: async (res: unknown) => {
+          await handleGoogleCallback(res, db, Method.Login);
+        },
+      });
+    }
+  });
 
   return (
     <div className="flex-grow grid grid-cols-1 justify-center items-center">
@@ -84,12 +82,10 @@ function Login() {
           <div className="flex justify-center items-center flex-col pt-2">
             <button
               onClick={async () => {
-                if (db != undefined) {
-                  await login(db, {
-                    username: username,
-                    password: password,
-                  });
-                }
+                await login(db, {
+                  username: username,
+                  password: password,
+                });
               }}
               type="submit"
               className="text-white bg-black hover:bg-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-8 py-2.5 text-center"

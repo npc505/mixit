@@ -16,18 +16,16 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const db = useContext(DbContext);
 
-  if (db !== undefined) {
-    loadGoogleScript(() => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (res: unknown) => {
-            await handleGoogleCallback(res, db, Method.Register);
-          },
-        });
-      }
-    });
-  }
+  loadGoogleScript(() => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: async (res: unknown) => {
+          await handleGoogleCallback(res, db, Method.Register);
+        },
+      });
+    }
+  });
 
   return (
     <div className="flex items-center justify-center">
@@ -98,13 +96,11 @@ function Register() {
             <button
               className="bg-black text-lg text-white rounded-full py-2 px-12"
               onClick={async () => {
-                if (db != undefined) {
-                  await register(db, {
-                    username,
-                    email,
-                    password,
-                  });
-                }
+                await register(db, {
+                  username,
+                  email,
+                  password,
+                });
               }}
             >
               Register

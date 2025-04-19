@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import Details from "./views/Details";
 import { DbContext, getDb, Surreal } from "./surreal";
@@ -7,51 +7,10 @@ import Login from "./views/Login";
 import Register from "./views/Register";
 import Moodboard from "./views/Moodboard";
 import Explore from "./views/Explore";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Outlet,
-  Navigate,
-  // Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import MyCloset from "./views/Profile";
-import { Token } from "surrealdb";
-import Cookies from "js-cookie";
-
-function ProtectedRoute() {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const db = useContext(DbContext);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = Cookies.get("jwt");
-      console.log(token);
-
-      // Pass the token to authenticate method
-      if (token !== undefined) {
-        await (db.authenticate(token as Token), db.info());
-        const res = await db.info();
-        console.log(res);
-        if (res !== undefined) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>;
-  }
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
-}
+import ProtectedRoute from "./layout/ProtectedRoute";
 
 function App() {
   const [client, setClient] = useState<Surreal | undefined>();
@@ -66,7 +25,13 @@ function App() {
   }, []);
 
   if (!client) {
-    return;
+    return (
+      <Router>
+        <Routes>
+          <Route element={<MainLayout />}>/* TODO: Animated loading */</Route>
+        </Routes>
+      </Router>
+    );
   }
 
   return (
