@@ -1,7 +1,8 @@
 REMOVE TABLE IF EXISTS usuario;
 DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
     PERMISSIONS
-        FOR select, create, update WHERE id = $auth.id
+        FOR create, update WHERE id = $auth.id
+        FOR select FULL
 ;
 
 -- ------------------------------
@@ -47,9 +48,17 @@ DEFINE FIELD username ON TABLE usuario TYPE string
         FOR select FULL;
 ;
 
-DEFINE FIELD nombres ON usuario TYPE option<string>;
-DEFINE FIELD apellidos ON usuario TYPE option<string>;
+DEFINE FIELD nombres ON usuario TYPE option<string>
+    PERMISSIONS
+        FOR select WHERE id = $auth.id
+;
+DEFINE FIELD apellidos ON usuario TYPE option<string>
+    PERMISSIONS
+        FOR select WHERE id = $auth.id
+;
 DEFINE FIELD correo ON usuario TYPE string
+    PERMISSIONS
+        FOR select WHERE id = $auth.id
     ASSERT
         $value != None AND string::is::email($value)
 ;
@@ -58,8 +67,8 @@ DEFINE FIELD using_today ON usuario TYPE option<record<mixit>>
         $value != None AND $value.public == true
 ;
 
-DEFINE FIELD profile_picture ON usuario TYPE option<string> PERMISSIONS FULL;
-DEFINE FIELD back_picture ON usuario TYPE option<string> PERMISSIONS FULL;
+DEFINE FIELD profile_picture ON usuario TYPE option<string>;
+DEFINE FIELD back_picture ON usuario TYPE option<string>;
 
 
 -- ------------------------------

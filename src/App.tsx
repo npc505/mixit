@@ -39,13 +39,19 @@ function App() {
     <DbContext.Provider value={client}>
       <Router>
         <Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<MainLayout pad4={false} />}>
+              <Route path="/closet" element={<MyCloset />} />
+            </Route>
+          </Route>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<MainLayout />}>
+              <Route path="/moodboard" element={<Moodboard />} />
+            </Route>
+          </Route>
           <Route element={<MainLayout />}>
             <Route path="/explore" element={<Explore />} />
             <Route path="/details" element={<Details />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/moodboard" element={<Moodboard />} />
-              <Route path="/closet" element={<MyCloset />} />
-            </Route>
           </Route>
           <Route element={<ProtectedRoute authScreen={true} />}>
             <Route element={<MainLayout pad4={false} />}>
