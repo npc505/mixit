@@ -1,8 +1,7 @@
 REMOVE TABLE IF EXISTS usuario;
 DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
     PERMISSIONS
-        FOR select FULL
-        FOR create, update WHERE id = $auth.id
+        FOR select, create, update WHERE id = $auth.id
 ;
 
 -- ------------------------------
@@ -11,7 +10,6 @@ DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
 
 DEFINE FIELD id ON usuario TYPE record<usuario> READONLY
     PERMISSIONS
-        FOR create, update NONE
         FOR select FULL
 ;
 
@@ -23,7 +21,9 @@ DEFINE FIELD followers ON TABLE usuario VALUE <future> {
     } ELSE {
         RETURN $res;
     }
-};
+} PERMISSIONS
+    FOR select FULL
+;
 
 DEFINE FIELD following ON TABLE usuario VALUE <future> {
     LET $res = (SELECT COUNT(->follows) FROM ONLY $this).count;
@@ -33,7 +33,9 @@ DEFINE FIELD following ON TABLE usuario VALUE <future> {
     } ELSE {
         RETURN $res;
     }
-};
+} PERMISSIONS
+    FOR select FULL
+;
 
 
 DEFINE FIELD pass ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NONE;
@@ -41,18 +43,24 @@ DEFINE FIELD sub ON TABLE usuario TYPE option<string> READONLY PERMISSIONS FOR s
 DEFINE FIELD username ON TABLE usuario TYPE string
     ASSERT
         $value != None AND string::len($value) > 5
+    PERMISSIONS
+        FOR select FULL;
 ;
 
 DEFINE FIELD nombres ON usuario TYPE option<string>;
 DEFINE FIELD apellidos ON usuario TYPE option<string>;
 DEFINE FIELD correo ON usuario TYPE string
-    PERMISSIONS
-        FOR select WHERE id = $auth.id
     ASSERT
         $value != None AND string::is::email($value)
 ;
+DEFINE FIELD using_today ON usuario TYPE option<record<mixit>>
+    ASSERT
+        $value != None AND $value.public == true
+;
 
 DEFINE FIELD profile_picture ON usuario TYPE option<string> PERMISSIONS FULL;
+DEFINE FIELD back_picture ON usuario TYPE option<string> PERMISSIONS FULL;
+
 
 -- ------------------------------
 -- INDEXES
