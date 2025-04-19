@@ -6,6 +6,7 @@ import {
   Method,
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -13,6 +14,7 @@ function Login() {
   const [videoOpacity, setVideoOpacity] = useState("opacity-100");
   const [formOpacity, setFormOpacity] = useState("opacity-0");
   const db = useContext(DbContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -82,10 +84,13 @@ function Login() {
           <div className="flex justify-center items-center flex-col pt-2">
             <button
               onClick={async () => {
-                await login(db, {
+                const res = await login(db, {
                   username: username,
                   password: password,
                 });
+                if (res === true) {
+                  navigate("/explore");
+                }
               }}
               type="submit"
               className="text-white bg-black hover:bg-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-8 py-2.5 text-center"

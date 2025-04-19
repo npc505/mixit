@@ -8,6 +8,7 @@ import {
   register,
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const db = useContext(DbContext);
+  const navigate = useNavigate();
 
   loadGoogleScript(() => {
     if (window.google) {
@@ -96,11 +98,14 @@ function Register() {
             <button
               className="bg-black text-lg text-white rounded-full py-2 px-12"
               onClick={async () => {
-                await register(db, {
+                const res = await register(db, {
                   username,
                   email,
                   password,
                 });
+                if (res === true) {
+                  navigate("/explore");
+                }
               }}
             >
               Register

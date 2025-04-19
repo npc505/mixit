@@ -40,7 +40,6 @@ function App() {
       <Router>
         <Routes>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<LandingPage />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/details" element={<Details />} />
             <Route element={<ProtectedRoute />}>
@@ -48,9 +47,12 @@ function App() {
               <Route path="/closet" element={<MyCloset />} />
             </Route>
           </Route>
-          <Route element={<MainLayout pad4={false} />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+          <Route element={<ProtectedRoute authScreen={true} />}>
+            <Route element={<MainLayout pad4={false} />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
           </Route>
         </Routes>
       </Router>

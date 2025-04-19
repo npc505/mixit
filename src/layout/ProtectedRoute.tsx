@@ -4,7 +4,7 @@ import { DbContext } from "../surreal";
 import { Token } from "surrealdb";
 import Cookies from "js-cookie";
 
-function ProtectedRoute() {
+function ProtectedRoute({ authScreen = false }: { authScreen?: boolean }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const db = useContext(DbContext);
 
@@ -18,11 +18,11 @@ function ProtectedRoute() {
           await db.authenticate(token as Token);
           const res = await db.info();
           if (res?.id !== undefined && res?.id !== null) {
-            // When res is not undefined it means the client was able to select the users info (which is the minimum required) and thus the session is ready :D
             authenticated = true;
           }
         } catch (error) {
           console.error("Authentication error:", error);
+          Cookies.remove("jwt");
         }
       }
 
@@ -33,11 +33,18 @@ function ProtectedRoute() {
   }, [db]);
 
   if (isAuthenticated === null) {
-    /* TODO: Loading thingy */
     return <div></div>;
   }
 
-  return isAuthenticated === true ? <Outlet /> : <Navigate to="/login" />;
+  if (isAuthenticated === true && authScreen === true) {
+    return <Navigate to="/explore" />;
+  } else {
+    return isAuthenticated || authScreen ? (
+      <Outlet />
+    ) : (
+      <Navigate to="/login" />
+    );
+  }
 }
 
 export default ProtectedRoute;

@@ -10,7 +10,7 @@ declare global {
 export async function login(
   db: Surreal,
   credentials: GoogleOauth | OwnAuthSignin,
-): Promise<void> {
+): Promise<boolean> {
   try {
     if (instanceOfGoogleOauth(credentials)) {
       const token = await db.signin({
@@ -25,8 +25,8 @@ export async function login(
         },
       });
 
-      // console.log("si existe por google", token);
       document.cookie = `jwt=${token}; path=/`;
+      return true;
     } else {
       const token = await db.signin({
         access: "account",
@@ -40,12 +40,14 @@ export async function login(
         },
       });
 
-      // console.log("si existe por propio", token);
       document.cookie = `jwt=${token}; path=/`;
+      return true;
     }
   } catch (err: unknown) {
     console.error("Failed", err instanceof Error ? err.message : String(err));
   }
+
+  return false;
 }
 
 interface GoogleOauth {
@@ -72,7 +74,7 @@ function instanceOfGoogleOauth(object: any): object is GoogleOauth {
 export async function register(
   db: Surreal,
   credentials: GoogleOauth | OwnAuthSignup,
-): Promise<void> {
+): Promise<boolean> {
   try {
     if (instanceOfGoogleOauth(credentials)) {
       console.log("Register with Google OAuth");
@@ -86,8 +88,8 @@ export async function register(
         },
       });
 
-      // console.log("ahora existe", token);
       document.cookie = `jwt=${token}; path=/`;
+      return true;
     } else {
       console.log("Register with Email");
       const token = await db.signup({
@@ -101,12 +103,14 @@ export async function register(
         },
       });
 
-      // console.log("ahora existe", token);
       document.cookie = `jwt=${token}; path=/`;
+      return true;
     }
   } catch (err: unknown) {
     console.error("Failed", err instanceof Error ? err.message : String(err));
   }
+
+  return false;
 }
 
 // Load the Google API script
