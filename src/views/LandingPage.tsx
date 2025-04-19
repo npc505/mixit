@@ -2,6 +2,7 @@ import "../App.css";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import AutoCarousel from "../components/AutoCarousel";
+import Button from "../components/Button";
 
 const phrases = ["Wear It", "Dress Smart", "Mix & Match", "Style Now"];
 
@@ -33,24 +34,20 @@ function LandingPage() {
           Unleash your best fashion combinations
         </p>
         <div className="pt-12 flex flex-col md:flex-row lg:flex-row gap-4">
-          <button
-            type="button"
-            className="text-white border-2 border-solid-black bg-black hover:bg-white hover:text-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-lg px-8 py-2 text-center"
+          <Button
             onClick={() => {
               navigate("/register");
             }}
-          >
-            Register
-          </button>
-          <button
-            type="button"
-            className="text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-lg px-8 py-2 text-center"
+            label="Register"
+            isActive={true}
+          />
+          <Button
             onClick={() => {
               navigate("/login");
             }}
-          >
-            Log In
-          </button>
+            label="Log In"
+            isActive={false}
+          />
         </div>
       </div>
       <div className="pt-10 md:pt-0 lg:pt-0">

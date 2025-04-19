@@ -7,6 +7,7 @@ import {
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/Button";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -82,7 +83,7 @@ function Login() {
             />
           </div>
           <div className="flex justify-center items-center flex-col pt-2">
-            <button
+            <Button
               onClick={async () => {
                 const res = await login(db, {
                   username: username,
@@ -92,11 +93,9 @@ function Login() {
                   navigate("/explore");
                 }
               }}
-              type="submit"
-              className="text-white bg-black hover:bg-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-8 py-2.5 text-center"
-            >
-              Log in
-            </button>
+              isActive={true}
+              label="Log in"
+            />
             <p className="text-gray-400 md:text-gray-300 lg:text-gray-300 pt-4 hover:underline cursor-pointer">
               Forgot my password
             </p>

@@ -1,25 +1,5 @@
 import { useState } from "react";
-
-interface TabButtonProps {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-const TabButton = ({ label, isActive, onClick }: TabButtonProps) => {
-  return (
-    <button
-      className={`px-6 py-2 text-lg font-medium rounded-full transition-colors ${
-        isActive
-          ? "bg-black text-white"
-          : "text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white"
-      }`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-};
+import Button from "../components/Button";
 
 interface TabGridProps {
   tabs: { id: string; label: string }[];
@@ -31,7 +11,7 @@ const TabGrid = ({ tabs, activeTab, setActiveTab }: TabGridProps) => {
   return (
     <div className="flex space-x-4 px-4 mb-6">
       {tabs.map((tab) => (
-        <TabButton
+        <Button
           key={tab.id}
           label={tab.label}
           isActive={activeTab === tab.id}

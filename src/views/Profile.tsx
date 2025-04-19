@@ -49,6 +49,10 @@ const MyCloset = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    while (isUploading) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     setIsUploading(true);
 
     try {
@@ -76,6 +80,10 @@ const MyCloset = () => {
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    while (isBannerUploading) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
     setIsBannerUploading(true);
 

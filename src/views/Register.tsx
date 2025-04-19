@@ -9,6 +9,7 @@ import {
 } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/Button";
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -95,8 +96,7 @@ function Register() {
             </label>
           </div>
           <div className="flex flex-col items-center justify-center pt-8">
-            <button
-              className="bg-black text-lg text-white rounded-full py-2 px-12"
+            <Button
               onClick={async () => {
                 const res = await register(db, {
                   username,
@@ -107,9 +107,9 @@ function Register() {
                   navigate("/explore");
                 }
               }}
-            >
-              Register
-            </button>
+              isActive={true}
+              label="Register"
+            />
 
             <div className="flex items-center justify-center w-full py-12">
               <div className="w-28 md:w-60 lg:w-60 border-t border-gray-300"></div>
