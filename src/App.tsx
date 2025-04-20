@@ -9,7 +9,7 @@ import Moodboard from "./views/Moodboard";
 import Explore from "./views/Explore";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
-import MyCloset from "./views/Profile";
+import Closet from "./views/Profile";
 import ProtectedRoute from "./layout/ProtectedRoute";
 import { ConnectionStatus } from "surrealdb";
 
@@ -39,20 +39,22 @@ function App() {
     <DbContext.Provider value={client}>
       <Router>
         <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route element={<MainLayout pad4={false} />}>
-              <Route path="/closet" element={<MyCloset />} />
-            </Route>
-          </Route>
-          <Route element={<ProtectedRoute />}>
-            <Route element={<MainLayout />}>
-              <Route path="/moodboard" element={<Moodboard />} />
-            </Route>
-          </Route>
+          /* Public pages */
           <Route element={<MainLayout />}>
             <Route path="/explore" element={<Explore />} />
             <Route path="/details" element={<Details />} />
           </Route>
+          /* Private pages (require sign in) */
+          <Route element={<ProtectedRoute />}>
+            <Route element={<MainLayout pad4={false} />}>
+              <Route path="/closet" element={<Closet />} />
+              <Route path="/closet/:id" element={<Closet />} />
+            </Route>
+            <Route element={<MainLayout />}>
+              <Route path="/moodboard" element={<Moodboard />} />
+            </Route>
+          </Route>
+          /* Register pages, redirect to /explore when ready */
           <Route element={<ProtectedRoute authScreen={true} />}>
             <Route element={<MainLayout pad4={false} />}>
               <Route path="/" element={<LandingPage />} />

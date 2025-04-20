@@ -3,12 +3,22 @@ import { DbContext } from "../surreal";
 import { RecordId } from "surrealdb";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
+import { useParams } from "react-router-dom";
 
-const MyCloset = () => {
+function Closet() {
   const [activeTab, setActiveTab] = useState("all");
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
+
+  let is_user_profile = false;
+  let { id } = useParams<{ id?: string }>();
+  if (id === undefined) {
+    id = "$auth.id";
+    is_user_profile = true;
+  }
+
+  console.log(`Profile for ${id}`);
 
   const [info, setInfo] = useState<
     undefined | { [x: string]: unknown; id: RecordId<string> }
@@ -19,7 +29,18 @@ const MyCloset = () => {
   useEffect(() => {
     const fetchInfo = async () => {
       try {
-        const result = await db.info();
+        const result = is_user_profile
+          ? await db.info()
+          : (
+              (await db.query(
+                `SELECT * FROM ONLY fn::search_by_username("${id}") LIMIT 1`,
+              )) as unknown as [
+                undefined | { [x: string]: unknown; id: RecordId<string> },
+              ]
+            )[0];
+
+        console.log(result);
+
         setInfo(result);
       } catch (error) {
         console.error("Failed to fetch info:", error);
@@ -27,20 +48,20 @@ const MyCloset = () => {
     };
 
     fetchInfo();
-  }, [db]);
+  }, [db, id, is_user_profile]);
 
   if (info === undefined) {
     return <div>Error getting user info, try to reload</div>;
   }
 
   const handleProfilePictureClick = () => {
-    if (profilePicture_fileInputRef.current) {
+    if (profilePicture_fileInputRef.current && is_user_profile) {
       profilePicture_fileInputRef.current.click();
     }
   };
 
   const handleBannerPictureClick = () => {
-    if (bannerImage_fileInputRef.current) {
+    if (bannerImage_fileInputRef.current && is_user_profile) {
       bannerImage_fileInputRef.current.click();
     }
   };
@@ -131,12 +152,14 @@ const MyCloset = () => {
           backgroundPosition: "center",
         }}
       >
-        <span
-          className="absolute top-4 right-4 text-sm text-white px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10"
-          onClick={handleBannerPictureClick}
-        >
-          Edit
-        </span>
+        {is_user_profile && (
+          <span
+            className="absolute top-4 right-4 text-sm text-white px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10"
+            onClick={handleBannerPictureClick}
+          >
+            Edit
+          </span>
+        )}
         {isBannerUploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -150,7 +173,7 @@ const MyCloset = () => {
           accept="image/*"
         />
         <div
-          className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden cursor-pointer group relative"
+          className={`w-24 h-24 rounded-full bg-gray-200 overflow-hidden ${is_user_profile ? "cursor-pointer" : ""} group relative`}
           style={{
             // TODO: use an env var or something
             backgroundImage:
@@ -162,11 +185,13 @@ const MyCloset = () => {
           }}
           onClick={handleProfilePictureClick}
         >
-          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-50 flex items-center justify-center transition-opacity duration-300">
-            <span className="text-white font-medium border border-black">
-              Upload
-            </span>
-          </div>
+          {is_user_profile && (
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-50 flex items-center justify-center transition-opacity duration-300">
+              <span className="text-white font-medium border border-black">
+                Upload
+              </span>
+            </div>
+          )}
           {isUploading && (
             <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-50">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
@@ -215,6 +240,6 @@ const MyCloset = () => {
       </div>
     </div>
   );
-};
+}
 
-export default MyCloset;
+export default Closet;
