@@ -223,7 +223,7 @@ function Closet() {
             // TODO: use an env var or something
             backgroundImage:
               typeof info.profile_picture === "string"
-                ? `url(http://localhost:1234/${info.profile_picture})`
+                ? `url(${import.meta.env.VITE_IMG_SERVICE_URI}/${info.profile_picture})`
                 : "none",
             backgroundSize: "cover",
             backgroundPosition: "center",

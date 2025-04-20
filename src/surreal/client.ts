@@ -7,7 +7,7 @@ interface DbConfig {
 }
 
 const DEFAULT_CONFIG: DbConfig = {
-  url: "http://100.115.14.74:9999/rpc",
+  url: import.meta.env.VITE_DB_URI,
   namespace: "mixit",
   database: "mixit",
 };
