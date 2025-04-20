@@ -15,7 +15,7 @@ function Closet() {
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
   const { id: paramId } = useParams<{ id?: string }>();
-  const id = paramId === undefined ? "$auth.id" : paramId;
+  const id = paramId === undefined ? "$auth.username" : paramId;
 
   // We only set the state via a useEffect to avoid infinite re-renders
   useEffect(() => {
@@ -374,9 +374,38 @@ function Closet() {
           style={{ display: "none" }}
           accept="image/*"
         />
-        <p className={`mt-2 text-xl font-semibold ${textColor} z-10`}>
-          {typeof info.username === "string" ? info.username : "Username"}
-        </p>
+        <div
+          className={`mt-2 text-xl font-semibold ${textColor} z-10 relative`}
+        >
+          {is_user_profile ? (
+            <input
+              type="text"
+              value={
+                typeof info.username === "string" ? info.username : "Username"
+              }
+              onChange={async (e) => {
+                const newUsername = e.target.value;
+                const updatedInfo = { ...info, username: newUsername };
+                setInfo(updatedInfo);
+                await db.query(
+                  `UPDATE $auth.id SET username = "${newUsername}"`,
+                );
+                if (paramId !== undefined) {
+                  window.history.replaceState(
+                    null,
+                    "",
+                    `/closet/${newUsername}`,
+                  );
+                }
+              }}
+              className="bg-transparent text-center outline-none border-b border-transparent hover:border-current focus:border-current"
+            />
+          ) : (
+            <p>
+              {typeof info.username === "string" ? info.username : "Username"}
+            </p>
+          )}
+        </div>
         <div className={`${is_user_profile ? "invisible" : "visible"} z-10`}>
           <Button
             onClick={handleFollow}

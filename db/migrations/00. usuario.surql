@@ -43,7 +43,7 @@ DEFINE FIELD pass ON TABLE usuario TYPE option<string> PERMISSIONS FOR select NO
 DEFINE FIELD sub ON TABLE usuario TYPE option<string> READONLY PERMISSIONS FOR select NONE;
 DEFINE FIELD username ON TABLE usuario TYPE string
     ASSERT
-        $value != None AND string::len($value) > 5
+        $value != None AND string::len($value) >= 3
     PERMISSIONS
         FOR select FULL;
 ;
