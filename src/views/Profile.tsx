@@ -8,16 +8,16 @@ import Button from "../components/Button";
 function Closet() {
   const [activeTab, setActiveTab] = useState("all");
   const [imgColorKind, setImgColorKind] = useState("neutral");
+  const [is_user_profile, setIsUserProfile] = useState(false);
 
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
-  let is_user_profile = false;
   let { id } = useParams<{ id?: string }>();
   if (id === undefined) {
     id = "$auth.id";
-    is_user_profile = true;
+    setIsUserProfile(true);
   }
 
   console.log(`Profile for ${id}`);
@@ -153,13 +153,18 @@ function Closet() {
                         FROM ONLY $auth.id->follows
                       WHERE out = fn::search_by_username("${id}")
                       LIMIT 1
-                  ) AS relation
+                  ) AS relation,
+                  $auth.id == fn::search_by_username("${id}") AS is_self
                 FROM ONLY fn::search_by_username("${id}")
               LIMIT 1`,
               )) as Record[]
             )[0];
 
         console.log(result);
+
+        if (result !== undefined && result.is_self === true) {
+          setIsUserProfile(true);
+        }
 
         setInfo(result);
       } catch (error) {
