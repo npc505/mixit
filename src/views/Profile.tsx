@@ -323,12 +323,24 @@ function Closet() {
           style={{ zIndex: 0 }}
         />
         {is_user_profile && (
-          <span
-            className={`absolute top-4 right-4 text-sm ${textColor} px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10`}
-            onClick={handleBannerPictureClick}
-          >
-            Edit
-          </span>
+          <div className="flex flex-col">
+            <span
+              className={`absolute top-4 right-4 text-xs ${textColor} px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10`}
+              onClick={handleBannerPictureClick}
+            >
+              Edit
+            </span>
+            <span
+              className={`absolute top-10 right-4 text-xs ${textColor} px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10`}
+              onClick={() => {
+                document.cookie =
+                  "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.href = "/";
+              }}
+            >
+              Log Out
+            </span>
+          </div>
         )}
         {isBannerUploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10">
