@@ -4,6 +4,7 @@ import { RecordId } from "surrealdb";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
 import { useParams } from "react-router-dom";
+import Button from "../components/Button";
 
 function Closet() {
   const [activeTab, setActiveTab] = useState("all");
@@ -33,7 +34,16 @@ function Closet() {
           ? await db.info()
           : (
               (await db.query(
-                `SELECT * FROM ONLY fn::search_by_username("${id}") LIMIT 1`,
+                `SELECT
+                  *,
+                  (
+                      SELECT VALUE id
+                        FROM ONLY $auth.id->follows
+                      WHERE out = fn::search_by_username("${id}")
+                      LIMIT 1
+                  ) AS relation
+                FROM ONLY fn::search_by_username("${id}")
+              LIMIT 1`,
               )) as unknown as [
                 undefined | { [x: string]: unknown; id: RecordId<string> },
               ]
@@ -128,6 +138,43 @@ function Closet() {
     }
   };
 
+  const handleFollow = async () => {
+    try {
+      if (info.relation === undefined) {
+        const res = (
+          await db.query(
+            `SELECT * FROM ONLY fn::follow(fn::search_by_username("${id}")) LIMIT 1;`,
+          )
+        )[0];
+
+        if (res !== undefined && res !== null) {
+          const updatedInfo = {
+            ...info,
+            relation: res.id,
+            followers:
+              (typeof info.followers === "number" ? info.followers : 0) + 1,
+          };
+          setInfo(updatedInfo);
+        }
+      } else {
+        await db.query(
+          `SELECT * FROM ONLY fn::unfollow(fn::search_by_username("${id}")) LIMIT 1;`,
+        );
+        const updatedInfo = {
+          ...info,
+          relation: undefined,
+          followers: Math.max(
+            0,
+            (typeof info.followers === "number" ? info.followers : 0) - 1,
+          ),
+        };
+        setInfo(updatedInfo);
+      }
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
   const tabs = [
     { id: "all", label: "All" },
     { id: "tops", label: "Tops" },
@@ -208,6 +255,13 @@ function Closet() {
         <p className="mt-2 text-xl font-semibold">
           {typeof info.username === "string" ? info.username : "Username"}
         </p>
+        <div className={is_user_profile ? "invisible" : "visible"}>
+          <Button
+            onClick={handleFollow}
+            label={info.relation === undefined ? "Follow" : "Following"}
+            isActive={true}
+          />
+        </div>
         <div className="flex flex-row mt-4 space-x-6">
           <div className="flex flex-col items-center">
             <span className="text-xl font-bold">
