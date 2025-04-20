@@ -2,7 +2,10 @@ REMOVE TABLE IF EXISTS follows;
 DEFINE TABLE follows TYPE RELATION IN usuario OUT usuario ENFORCED SCHEMAFULL
     PERMISSIONS
         -- TODO: Define follow privacy
-        FOR create, update, delete, select WHERE in = $auth.id
+        -- notes: for anyone to count the followers of any other person the
+        -- relation "follows" needs to be public, visible
+        FOR select FULL
+        FOR create, update, delete WHERE in = $auth.id
 ;
 
 -- ------------------------------
