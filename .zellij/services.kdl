@@ -1,0 +1,17 @@
+layout {
+    pane split_direction="horizontal" {
+        pane split_direction="vertical" {
+            pane command="npm" {
+                args "run" "dev"
+            }
+            pane command="just" {
+                args "start-imgdb"
+            }
+        }
+        pane split_direction="vertical" {
+            pane command="just" {
+                args "start-surreal"
+            }
+        }
+    }
+}
