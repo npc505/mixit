@@ -395,22 +395,39 @@ function Closet() {
               value={
                 typeof info.username === "string" ? info.username : "Username"
               }
-              onChange={async (e) => {
+              className={`bg-transparent text-center outline-none border-b ${
+                info.error
+                  ? "border-red-500"
+                  : "border-transparent hover:border-current focus:border-current"
+              }`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+              }}
+              onChange={(e) => {
                 const newUsername = e.target.value;
                 const updatedInfo = { ...info, username: newUsername };
                 setInfo(updatedInfo);
-                await db.query(
-                  `UPDATE $auth.id SET username = "${newUsername}"`,
-                );
-                if (paramId !== undefined) {
-                  window.history.replaceState(
-                    null,
-                    "",
-                    `/closet/${newUsername}`,
+              }}
+              onBlur={async (e) => {
+                const newUsername = e.target.value;
+                try {
+                  await db.query(
+                    `UPDATE $auth.id SET username = "${newUsername}"`,
                   );
+                  if (paramId !== undefined) {
+                    window.history.replaceState(
+                      null,
+                      "",
+                      `/closet/${newUsername}`,
+                    );
+                  }
+                  setInfo((prev) => ({ ...prev, error: false }));
+                } catch (error) {
+                  setInfo((prev) => ({ ...prev, error: true }));
                 }
               }}
-              className="bg-transparent text-center outline-none border-b border-transparent hover:border-current focus:border-current"
             />
           ) : (
             <p>
