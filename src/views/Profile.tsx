@@ -32,7 +32,7 @@ function Closet() {
   // Basicamente tomamos N pixeles al azar, vemos qué intensidad tiene y después, con el
   // promedio de las muestras determinamos si es obscuro o no
   useEffect(() => {
-    const updateBannerText = async () => {
+    const updateBannerImage = async () => {
       const canvas = canvasRef.current;
       if (info === undefined || !canvas || !info.back_picture) {
         return;
@@ -49,16 +49,50 @@ function Closet() {
       image.crossOrigin = "Anonymous";
       image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture}`;
 
+      // Gracias a Karlita por la lógica para que no se distorsione la imagen
       image.onload = () => {
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        // Set canvas dimensions to match the container
+        const containerEl = canvas.parentElement;
+        if (containerEl) {
+          canvas.width = containerEl.clientWidth;
+          canvas.height = containerEl.clientHeight;
+        } else {
+          canvas.width = image.width;
+          canvas.height = image.height;
+        }
+
+        // Calculate dimensions to maintain aspect ratio
+        const containerWidth = canvas.width;
+        const containerHeight = canvas.height;
+        const imageAspectRatio = image.width / image.height;
+        const containerAspectRatio = containerWidth / containerHeight;
+
+        let drawWidth,
+          drawHeight,
+          offsetX = 0,
+          offsetY = 0;
+
+        if (imageAspectRatio > containerAspectRatio) {
+          // Image is wider than container (relative to height)
+          drawHeight = containerHeight;
+          drawWidth = drawHeight * imageAspectRatio;
+          offsetX = (containerWidth - drawWidth) / 2;
+        } else {
+          // Image is taller than container (relative to width)
+          drawWidth = containerWidth;
+          drawHeight = drawWidth / imageAspectRatio;
+          offsetY = (containerHeight - drawHeight) / 2;
+        }
+
+        // Clear canvas before drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the image with proper aspect ratio
+        ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 
         try {
           const width = canvas.width;
           const height = canvas.height;
-          // const totalPixels = width * height;
-          // const numSamples = Math.floor(totalPixels * 0.4);
           const numSamples = 100;
 
           let totalRed = 0,
@@ -86,7 +120,6 @@ function Closet() {
           console.log("Average RGB:", avgRed, avgGreen, avgBlue);
 
           const percent = (avgRed + avgGreen + avgBlue) / (255 * 3);
-          // La vd no sé si está bien as
           if (percent < 0.5) {
             console.log("Image is dark");
             setImgColorKind("dark");
@@ -103,7 +136,7 @@ function Closet() {
       };
     };
 
-    updateBannerText();
+    updateBannerImage();
   }, [info]);
 
   useEffect(() => {
@@ -264,12 +297,6 @@ function Closet() {
 
   return (
     <div>
-      <canvas
-        ref={canvasRef}
-        width="1"
-        height="1"
-        style={{ display: "none" }}
-      />
       {is_user_profile && (
         <p className="text-4xl font-bold text-left font-poppins p-4">
           My Closet
@@ -279,14 +306,13 @@ function Closet() {
         className="w-full h-[50vh] relative flex flex-col items-center justify-center"
         style={{
           backgroundColor: "#FDCCE9",
-          backgroundImage:
-            typeof info.back_picture === "string" && info.back_picture !== ""
-              ? `url(${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture})`
-              : "none",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
         }}
       >
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 0 }}
+        />
         {is_user_profile && (
           <span
             className={`absolute top-4 right-4 text-sm ${textColor} px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10`}
@@ -308,9 +334,8 @@ function Closet() {
           accept="image/*"
         />
         <div
-          className={`w-24 h-24 rounded-full bg-gray-200 overflow-hidden ${is_user_profile ? "cursor-pointer" : ""} group relative`}
+          className={`w-24 h-24 rounded-full bg-gray-200 overflow-hidden ${is_user_profile ? "cursor-pointer" : ""} group relative z-10`}
           style={{
-            // TODO: use an env var or something
             backgroundImage:
               typeof info.profile_picture === "string"
                 ? `url(${import.meta.env.VITE_IMG_SERVICE_URI}/${info.profile_picture})`
@@ -340,17 +365,17 @@ function Closet() {
           style={{ display: "none" }}
           accept="image/*"
         />
-        <p className={`mt-2 text-xl font-semibold ${textColor}`}>
+        <p className={`mt-2 text-xl font-semibold ${textColor} z-10`}>
           {typeof info.username === "string" ? info.username : "Username"}
         </p>
-        <div className={is_user_profile ? "invisible" : "visible"}>
+        <div className={`${is_user_profile ? "invisible" : "visible"} z-10`}>
           <Button
             onClick={handleFollow}
             label={info.relation === undefined ? "Follow" : "Following"}
             isActive={true}
           />
         </div>
-        <div className="flex flex-row mt-4 space-x-6">
+        <div className="flex flex-row mt-4 space-x-6 z-10">
           <div className={`flex flex-col items-center ${textColor}`}>
             <span className="text-xl font-bold">
               {typeof info.followers === "number" ? info.followers : 0}
