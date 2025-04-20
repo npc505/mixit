@@ -14,11 +14,15 @@ function Closet() {
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
-  let { id } = useParams<{ id?: string }>();
-  if (id === undefined) {
-    id = "$auth.id";
-    setIsUserProfile(true);
-  }
+  const { id: paramId } = useParams<{ id?: string }>();
+  const id = paramId === undefined ? "$auth.id" : paramId;
+
+  // We only set the state via a useEffect to avoid infinite re-renders
+  useEffect(() => {
+    if (paramId === undefined) {
+      setIsUserProfile(true);
+    }
+  }, [paramId]);
 
   console.log(`Profile for ${id}`);
 
