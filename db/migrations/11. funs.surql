@@ -5,8 +5,12 @@ DEFINE FUNCTION fn::search_by_username($username: string) {
 
 REMOVE FUNCTION IF EXISTS fn::follow;
 DEFINE FUNCTION fn::follow($user: record<usuario>) {
-    RETURN RELATE ($auth.id)->follows->$user CONTENT {
-        date: time::now()
+    IF $auth.id == $user {
+        RETURN NONE;
+    } ELSE {
+        RETURN RELATE ($auth.id)->follows->$user CONTENT {
+            date: time::now()
+        };
     };
 };
 
