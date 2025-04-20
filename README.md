@@ -7,6 +7,23 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Environment Variables
+
+This project uses environment variables to configure various services. Create a `.env` file in the root directory with the following variables:
+
+```
+VITE_GOOGLE_CLIENT_ID="your-google-client-id"
+VITE_IMG_SERVICE_URI="your-imgdb-uri"
+VITE_DB_URI="your-database-uri"
+```
+
+## Using the Justfile
+
+- `just run`: Launches a zellij session with all required services
+- `just copy-db`: Copies database migration files to the clipboard in a format ready for SurrealDB
+- `just start-imgdb`: Starts the image database service with proper configuration
+- `just start-surreal`: Starts a SurrealDB server with secure settings
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
