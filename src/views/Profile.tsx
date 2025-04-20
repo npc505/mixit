@@ -7,6 +7,8 @@ import Button from "../components/Button";
 
 function Closet() {
   const [activeTab, setActiveTab] = useState("all");
+  const [imgColorKind, setImgColorKind] = useState("neutral");
+
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,6 +25,86 @@ function Closet() {
   const [info, setInfo] = useState<undefined | Record>();
   const [isUploading, setIsUploading] = useState(false);
   const [isBannerUploading, setIsBannerUploading] = useState(false);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Gracias a https://dvmhn07.medium.com/learn-to-detect-image-background-colors-in-react-using-html-canvas-8c2d9e527e7d
+  // Basicamente tomamos N pixeles al azar, vemos qué intensidad tiene y después, con el
+  // promedio de las muestras determinamos si es obscuro o no
+  useEffect(() => {
+    const updateBannerText = async () => {
+      const canvas = canvasRef.current;
+      if (info === undefined || !canvas || !info.back_picture) {
+        return;
+      }
+
+      console.log("Starting");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        console.error("Failed to get canvas context");
+        return;
+      }
+
+      const image = new Image();
+      image.crossOrigin = "Anonymous";
+      image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture}`;
+
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        try {
+          const width = canvas.width;
+          const height = canvas.height;
+          // const totalPixels = width * height;
+          // const numSamples = Math.floor(totalPixels * 0.4);
+          const numSamples = 100;
+
+          let totalRed = 0,
+            totalGreen = 0,
+            totalBlue = 0;
+
+          console.log(width, height);
+
+          for (let i = 0; i < numSamples; i++) {
+            const x = Math.floor(Math.random() * width);
+            const y = Math.floor(Math.random() * height);
+
+            const pixelData = ctx.getImageData(x, y, 1, 1).data;
+            const [red, green, blue] = pixelData;
+
+            totalRed += red;
+            totalGreen += green;
+            totalBlue += blue;
+          }
+
+          const avgRed = totalRed / numSamples;
+          const avgGreen = totalGreen / numSamples;
+          const avgBlue = totalBlue / numSamples;
+
+          console.log("Average RGB:", avgRed, avgGreen, avgBlue);
+
+          const percent = (avgRed + avgGreen + avgBlue) / (255 * 3);
+          // La vd no sé si está bien as
+          if (percent < 0.5) {
+            console.log("Image is dark");
+            setImgColorKind("dark");
+          } else {
+            setImgColorKind("neutral");
+          }
+        } catch (error) {
+          console.error("Error analyzing image colors:", error);
+        }
+      };
+
+      image.onerror = (err) => {
+        console.error("Error loading image:", err);
+      };
+    };
+
+    updateBannerText();
+  }, [info]);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -133,6 +215,8 @@ function Closet() {
     }
   };
 
+  const textColor = imgColorKind === "dark" ? "text-white" : "text-black";
+
   const handleFollow = async () => {
     try {
       if (info.relation === undefined) {
@@ -180,6 +264,12 @@ function Closet() {
 
   return (
     <div>
+      <canvas
+        ref={canvasRef}
+        width="1"
+        height="1"
+        style={{ display: "none" }}
+      />
       {is_user_profile && (
         <p className="text-4xl font-bold text-left font-poppins p-4">
           My Closet
@@ -191,7 +281,7 @@ function Closet() {
           backgroundColor: "#FDCCE9",
           backgroundImage:
             typeof info.back_picture === "string" && info.back_picture !== ""
-              ? `url(http://localhost:1234/${info.back_picture})`
+              ? `url(${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture})`
               : "none",
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -199,7 +289,7 @@ function Closet() {
       >
         {is_user_profile && (
           <span
-            className="absolute top-4 right-4 text-sm text-white px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10"
+            className={`absolute top-4 right-4 text-sm ${textColor} px-2 py-1 cursor-pointer hover:underline transition-all duration-300 z-10`}
             onClick={handleBannerPictureClick}
           >
             Edit
@@ -250,7 +340,7 @@ function Closet() {
           style={{ display: "none" }}
           accept="image/*"
         />
-        <p className="mt-2 text-xl font-semibold">
+        <p className={`mt-2 text-xl font-semibold ${textColor}`}>
           {typeof info.username === "string" ? info.username : "Username"}
         </p>
         <div className={is_user_profile ? "invisible" : "visible"}>
@@ -261,23 +351,23 @@ function Closet() {
           />
         </div>
         <div className="flex flex-row mt-4 space-x-6">
-          <div className="flex flex-col items-center">
+          <div className={`flex flex-col items-center ${textColor}`}>
             <span className="text-xl font-bold">
               {typeof info.followers === "number" ? info.followers : 0}
             </span>
             <span className="text-sm">Followers</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className={`flex flex-col items-center ${textColor}`}>
             <span className="text-xl font-bold">
               {typeof info.following === "number" ? info.following : 0}
             </span>
             <span className="text-sm">Following</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className={`flex flex-col items-center ${textColor}`}>
             <span className="text-xl font-bold">0</span>
             <span className="text-sm">MIXIS</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className={`flex flex-col items-center ${textColor}`}>
             <span className="text-xl font-bold">0</span>
             <span className="text-sm">In Hooks</span>
           </div>
