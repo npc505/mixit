@@ -1,5 +1,5 @@
 copy-db:
-    echo -e "BEGIN;\nUSE NS mixit DB mixit;\n\n$(cat db/migrations/*)\n\nCOMMIT;" | wl-copy
+    echo -e "BEGIN;\nDEFINE NAMESPACE OVERWRITE mixit;\nUSE NS mixit;\nDEFINE DATABASE OVERWRITE mixit;\nUSE DB mixit;\n\n$(cat db/migrations/*)\n\nCOMMIT;" | wl-copy
 
 start-imgdb:
     mkdir --parents /tmp/db
