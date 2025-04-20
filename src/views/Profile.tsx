@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState, useRef } from "react";
-import { DbContext } from "../surreal";
-import { RecordId } from "surrealdb";
+import { DbContext, Record } from "../surreal";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
 import { useParams } from "react-router-dom";
@@ -21,9 +20,7 @@ function Closet() {
 
   console.log(`Profile for ${id}`);
 
-  const [info, setInfo] = useState<
-    undefined | { [x: string]: unknown; id: RecordId<string> }
-  >();
+  const [info, setInfo] = useState<undefined | Record>();
   const [isUploading, setIsUploading] = useState(false);
   const [isBannerUploading, setIsBannerUploading] = useState(false);
 
@@ -44,9 +41,7 @@ function Closet() {
                   ) AS relation
                 FROM ONLY fn::search_by_username("${id}")
               LIMIT 1`,
-              )) as unknown as [
-                undefined | { [x: string]: unknown; id: RecordId<string> },
-              ]
+              )) as Record[]
             )[0];
 
         console.log(result);
@@ -141,11 +136,9 @@ function Closet() {
   const handleFollow = async () => {
     try {
       if (info.relation === undefined) {
-        const res = (
-          await db.query(
-            `SELECT * FROM ONLY fn::follow(fn::search_by_username("${id}")) LIMIT 1;`,
-          )
-        )[0];
+        const [res] = (await db.query(
+          `SELECT * FROM ONLY fn::follow(fn::search_by_username("${id}")) LIMIT 1;`,
+        )) as Record[];
 
         if (res !== undefined && res !== null) {
           const updatedInfo = {
@@ -177,16 +170,21 @@ function Closet() {
 
   const tabs = [
     { id: "all", label: "All" },
-    { id: "tops", label: "Tops" },
-    { id: "bottoms", label: "Bottoms" },
-    { id: "dresses", label: "Dresses" },
-    { id: "shoes", label: "Shoes" },
-    { id: "accessories", label: "Accessories" },
+    { id: "top", label: "Tops" },
+    { id: "bot", label: "Bottoms" },
+    { id: "full", label: "Dresses" },
+    { id: "foot", label: "Shoes" },
+    { id: "bag", label: "Bags" },
+    { id: "accessory", label: "Accessories" },
   ];
 
   return (
     <div>
-      <p className="text-4xl font-bold text-left font-poppins p-4">My Closet</p>
+      {is_user_profile && (
+        <p className="text-4xl font-bold text-left font-poppins p-4">
+          My Closet
+        </p>
+      )}
       <div
         className="w-full h-[50vh] relative flex flex-col items-center justify-center"
         style={{
