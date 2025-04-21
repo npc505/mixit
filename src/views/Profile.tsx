@@ -150,19 +150,26 @@ function Closet() {
           ? await db.info()
           : (
               (await db.query(
-                `SELECT
-                  *,
-                  (
-                      SELECT VALUE id
-                        FROM ONLY $auth.id->follows
-                      WHERE out = fn::search_by_username("${id}")
-                      LIMIT 1
-                  ) AS relation,
-                  $auth.id == fn::search_by_username("${id}") AS is_self
-                FROM ONLY fn::search_by_username("${id}")
-              LIMIT 1`,
+                `
+LET $id = IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
+    type::thing("usuario", "${id}")
+} ELSE {
+    fn::search_by_username("${id}")
+};
+
+SELECT
+    *,
+    (
+        SELECT VALUE id
+          FROM ONLY $auth.id->follows
+        WHERE out = $id
+        LIMIT 1
+    ) AS relation,
+    $auth.id == $id AS is_self
+  FROM ONLY $id
+LIMIT 1`,
               )) as Record[]
-            )[0];
+            )[1];
 
         console.log(result);
 
@@ -342,6 +349,27 @@ function Closet() {
             </span>
           </div>
         )}
+        <div
+          className={`absolute bottom-4 right-4 text-xs ${textColor} px-2 py-1 z-10 flex items-center gap-2`}
+        >
+          <span>{String(info.id?.id)}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="cursor-pointer hover:opacity-70"
+            onClick={() => navigator.clipboard.writeText(String(info.id?.id))}
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </div>
         {isBannerUploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -416,7 +444,7 @@ function Closet() {
                   await db.query(
                     `UPDATE $auth.id SET username = "${newUsername}"`,
                   );
-                  if (paramId !== undefined) {
+                  if (paramId !== undefined && paramId !== info.id.id) {
                     window.history.replaceState(
                       null,
                       "",
