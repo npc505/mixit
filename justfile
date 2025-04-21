@@ -3,7 +3,7 @@ copy-db:
 
 start-imgdb:
     mkdir --parents /tmp/db
-    cd imgdb && env DB_DIR="/tmp/db/" RUST_LOG="info" cargo run --release
+    cd imgdb && env DB_DIR="/home/ae/db/" RUST_LOG="info" cargo run --release
 
 start-surreal:
     surreal start --strict --deny-scripting --deny-guests --no-identification-headers -b '[::]:9999' -A -u root -p root --log debug --no-banner --query-timeout 10s

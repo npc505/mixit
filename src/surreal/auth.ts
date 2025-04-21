@@ -162,17 +162,15 @@ export async function handleGoogleCallback(
     if (db != undefined) {
       switch (method) {
         case Method.Register:
-          await register(db, {
+          return await register(db, {
             sub: googleId,
             email: userEmail,
           });
-          break;
         case Method.Login:
-          await login(db, {
+          return await login(db, {
             email: userEmail,
             sub: googleId,
           });
-          break;
       }
     }
 
@@ -183,6 +181,8 @@ export async function handleGoogleCallback(
       "Google sign-in failed. Please try again.",
     );
   }
+
+  return false;
 }
 
 // Helper function to decode the JWT token

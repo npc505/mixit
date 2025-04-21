@@ -31,7 +31,9 @@ function Login() {
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: async (res: unknown) => {
-          await handleGoogleCallback(res, db, Method.Login);
+          if (await handleGoogleCallback(res, db, Method.Register)) {
+            navigate("/explore");
+          }
         },
       });
     }
