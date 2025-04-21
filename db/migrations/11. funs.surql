@@ -1,6 +1,10 @@
 REMOVE FUNCTION IF EXISTS fn::search_by_username;
 DEFINE FUNCTION fn::search_by_username($username: string) {
-    RETURN SELECT VALUE id FROM ONLY usuario WHERE username == $username LIMIT 1;
+    IF (RETURN type::thing("usuario", $username) FETCH usuario) != NONE {
+        RETURN type::thing("usuario", $username);
+    } ELSE {
+        RETURN SELECT VALUE id FROM ONLY usuario WHERE username == $username LIMIT 1;
+    };
 };
 
 REMOVE FUNCTION IF EXISTS fn::follow;
