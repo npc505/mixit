@@ -32,3 +32,9 @@ DEFINE FIELD hooks ON mixit TYPE number READONLY
         FOR select WHERE public = true OR owner = $auth.id
         FOR create, update, delete NONE
 ;
+
+DEFINE FIELD tags ON mixit TYPE set<record<tag>> DEFAULT ALWAYS <set>[]
+    PERMISSIONS
+        FOR select WHERE public = true OR owner = $auth.id
+        FOR create, delete, update WHERE public = true OR owner = $auth.id
+;

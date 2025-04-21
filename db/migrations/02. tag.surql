@@ -8,7 +8,7 @@ DEFINE TABLE tag TYPE NORMAL SCHEMAFULL
 DEFINE FIELD nombre ON TABLE tag TYPE string;
 
 DEFINE FIELD refs ON TABLE tag VALUE <future> {
-    LET $res = (SELECT COUNT(<-tag_prenda) FROM ONLY $this).count;
+    LET $res = COUNT(SELECT id FROM $this->tagged);
 
     IF $res == None {
         RETURN 0;

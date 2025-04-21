@@ -40,38 +40,38 @@ DEFINE FUNCTION fn::create_prenda($image_url: string, $tipo: "top" | "bot" | "fu
     RETURN $new_prenda;
 };
 
-REMOVE FUNCTION IF EXISTS fn::untag_prenda;
-DEFINE FUNCTION fn::untag_prenda($prenda: record<prenda>, $tag: record<tag>) {
-    LET $relation = DELETE $prenda->tag_prenda WHERE out=$tag RETURN BEFORE;
+REMOVE FUNCTION IF EXISTS fn::untag_something;
+DEFINE FUNCTION fn::untag_something($something: record<prenda>|record<mixit>, $tag: record<tag>) {
+    LET $relation = DELETE $tag->tagged WHERE out=$something RETURN BEFORE;
 
-    UPDATE $prenda.id SET
-        tags -= $tag.id;
+    UPDATE $something SET
+        tags -= $tag;
 
     RETURN $relation;
 };
 
-REMOVE FUNCTION IF EXISTS fn::tag_prenda;
-DEFINE FUNCTION fn::tag_prenda($prenda: record<prenda>, $tag: record<tag>) {
-    LET $relation = RELATE $prenda->tag_prenda->$tag CONTENT {
+REMOVE FUNCTION IF EXISTS fn::tag_something;
+DEFINE FUNCTION fn::tag_something($something: record<prenda>|record<mixit>, $tag: record<tag>) {
+    LET $relation = RELATE $tag->tagged->$something CONTENT {
         date: time::now(),
     };
 
-    UPDATE $prenda.id SET
-        tags += $tag.id;
+    UPDATE $something SET
+        tags += $tag;
 
     RETURN $relation;
 };
 
-REMOVE FUNCTION IF EXISTS fn::tag_prenda_with_str;
-DEFINE FUNCTION fn::tag_prenda_with_str($prenda: record<prenda>, $tag_str: string) {
+REMOVE FUNCTION IF EXISTS fn::tag_something_with_str;
+DEFINE FUNCTION fn::tag_something_with_str($something: record<prenda>|record<mixit>, $tag_str: string) {
     LET $tag = SELECT *, search::score(1) AS score FROM ONLY tag WHERE nombre @1@ $tag_str ORDER BY score DESC LIMIT 1;
 
     LET $ftag = IF $tag == none {
         LET $new_tag = CREATE tag CONTENT { nombre: $tag_str };
-        $new_tag
+        $new_tag[0]
     } ELSE {
         $tag
     };
 
-    RETURN fn::tag_prenda($prenda, $ftag);
+    RETURN fn::tag_something($something, $ftag.id);
 };
