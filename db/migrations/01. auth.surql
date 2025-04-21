@@ -29,4 +29,7 @@ DEFINE ACCESS account ON DATABASE TYPE RECORD
             AND crypto::argon2::compare(pass, $password)
         ) OR sub = $sub
     )
+    DURATION
+        FOR TOKEN 90d
+        FOR SESSION 90d
 ;
