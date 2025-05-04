@@ -108,7 +108,7 @@ function Closet() {
           for (let i = 0; i < numSamples; i++) {
             const centerWidth = width / 2;
             const centerHeight = height / 2;
-            const spreadFactor = 0.5;
+            const spreadFactor = 0.25;
             const x = Math.floor(
               centerWidth + (Math.random() * 2 - 1) * width * spreadFactor,
             );
@@ -264,12 +264,11 @@ LIMIT 1`,
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    setIsBannerUploading(true);
-
     try {
       const uploadedHash = await uploadFile(file);
 
       if (uploadedHash) {
+        setIsBannerUploading(true);
         await db.query(`UPDATE $auth.id SET back_picture = "${uploadedHash}"`);
         const updatedInfo = {
           ...info,
