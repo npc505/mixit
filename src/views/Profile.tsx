@@ -38,7 +38,7 @@ function Closet() {
   useEffect(() => {
     const updateBannerImage = async () => {
       const canvas = canvasRef.current;
-      if (info === undefined || !canvas || !info.back_picture) {
+      if (!canvas || !info?.back_picture) {
         return;
       }
 
@@ -51,7 +51,7 @@ function Closet() {
 
       const image = new Image();
       image.crossOrigin = "Anonymous";
-      image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture}`;
+      image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info?.back_picture}`;
 
       // Gracias a Karlita por la lógica para que no se distorsione la imagen
       image.onload = () => {
@@ -97,7 +97,7 @@ function Closet() {
         try {
           const width = canvas.width;
           const height = canvas.height;
-          const numSamples = 100;
+          const numSamples = 250;
 
           let totalRed = 0,
             totalGreen = 0,
@@ -106,8 +106,15 @@ function Closet() {
           console.log(width, height);
 
           for (let i = 0; i < numSamples; i++) {
-            const x = Math.floor(Math.random() * width);
-            const y = Math.floor(Math.random() * height);
+            const centerWidth = width / 2;
+            const centerHeight = height / 2;
+            const spreadFactor = 0.5;
+            const x = Math.floor(
+              centerWidth + (Math.random() * 2 - 1) * width * spreadFactor,
+            );
+            const y = Math.floor(
+              centerHeight + (Math.random() * 2 - 1) * height * spreadFactor,
+            );
 
             const pixelData = ctx.getImageData(x, y, 1, 1).data;
             const [red, green, blue] = pixelData;
@@ -124,7 +131,7 @@ function Closet() {
           console.log("Average RGB:", avgRed, avgGreen, avgBlue);
 
           const percent = (avgRed + avgGreen + avgBlue) / (255 * 3);
-          if (percent < 0.5) {
+          if (percent < 0.6) {
             console.log("Image is dark");
             setImgColorKind("dark");
           } else {
@@ -143,7 +150,7 @@ function Closet() {
     };
 
     updateBannerImage();
-  }, [info]);
+  }, [info?.back_picture]);
 
   useEffect(() => {
     const fetchInfo = async () => {
@@ -179,6 +186,10 @@ LIMIT 1`,
           if (result.is_self === true) {
             setIsUserProfile(true);
           }
+
+          // if (result.back_picture !== undefined) {
+          //   setIsBannerUploading(true);
+          // }
 
           setInfo(result);
           console.log("Fetched info");
