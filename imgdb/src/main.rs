@@ -4,7 +4,7 @@ use axum::{
     body::Bytes,
     extract::{DefaultBodyLimit, Multipart, State},
     http::{HeaderValue, Method, StatusCode},
-    routing::{get, put},
+    routing::put,
     Json,
 };
 use tokio::io::AsyncWriteExt;
@@ -99,6 +99,7 @@ async fn app() -> Result<(), Error> {
         .allow_methods([Method::POST, Method::PATCH, Method::GET]);
 
     let db = if let Ok(var) = std::env::var("DB_DIR") {
+        log::info!("Read DB_DIR with value {var:?}");
         var.trim_end_matches('/').into()
     } else {
         return Err(Error::MissingDbToken);
@@ -108,21 +109,29 @@ async fn app() -> Result<(), Error> {
 
     let limit = std::env::var("IMG_LIMIT")
         .map(|v| {
-            if v.starts_with("None") {
+            log::info!("Read IMG_LIMIT with value {v:?}");
+            if v.to_lowercase().trim() == "none" {
                 Some(usize::MAX)
             } else {
                 v.parse::<usize>().ok()
             }
         })
         .unwrap_or_default()
-        .unwrap_or(1024 * 15);
+        .unwrap_or(10 * 1000000);
+
+    log::info!("DefaultBodyLimit set to {limit} B ({} MB)", limit / 1000000);
+
+    let uploader = axum::Router::new()
+        .route("/new", put(save_img).post(save_img).patch(save_img))
+        .layer(DefaultBodyLimit::max(limit));
+
+    let downloader = axum::Router::new()
+        .fallback_service(tower_http::services::ServeDir::new(state.db_path.as_path()))
+        .layer(tower_http::compression::CompressionLayer::new());
 
     let router = axum::Router::new()
-        .route("/new", put(save_img).post(save_img).patch(save_img))
-        .route("/get", get(get_imgs))
-        .layer(DefaultBodyLimit::max(limit))
-        .fallback_service(tower_http::services::ServeDir::new(state.db_path.as_path()))
-        .layer(tower_http::compression::CompressionLayer::new())
+        .merge(uploader)
+        .merge(downloader)
         .layer(cors)
         .with_state(state);
 
@@ -135,34 +144,6 @@ async fn app() -> Result<(), Error> {
 #[derive(serde::Serialize)]
 struct UploadResponse {
     hashes: Vec<String>,
-}
-
-async fn get_imgs(State(state): State<ServiceState>) -> Result<Json<UploadResponse>, StatusCode> {
-    use tokio::fs;
-
-    let mut rdir = fs::read_dir(state.db_path.as_path()).await.map_err(|e| {
-        println!("Error: {:?}", e);
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-
-    let mut v = vec![];
-
-    while let Some(dir) = rdir.next_entry().await.map_err(|e| {
-        println!("Error: {:?}", e);
-        StatusCode::INTERNAL_SERVER_ERROR
-    })? {
-        let res = dir.file_name();
-        if res.len() != 64 {
-            continue;
-        }
-
-        v.push(res.into_string().map_err(|e| {
-            println!("Error: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?);
-    }
-
-    Ok(Json(UploadResponse { hashes: v }))
 }
 
 async fn save_img(
@@ -216,11 +197,16 @@ async fn save_img(
                 StatusCode::INTERNAL_SERVER_ERROR
             })?;
 
-        file.write(bytes.as_ref()).await.map_err(|e| {
+        file.write_all(bytes.as_ref()).await.map_err(|e| {
             println!("Error: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-        log::info!("New {hash:?}");
+
+        log::info!(
+            "New {hash:?} of size {} B ({} MB)",
+            bytes.len(),
+            bytes.len() / 1000000,
+        );
     }
 
     Ok(Json(UploadResponse { hashes }))
