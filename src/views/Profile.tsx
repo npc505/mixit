@@ -94,6 +94,8 @@ function Closet() {
         // Draw the image with proper aspect ratio
         ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 
+        setIsBannerUploading(false);
+
         try {
           const width = canvas.width;
           const height = canvas.height;
@@ -173,21 +175,28 @@ LIMIT 1`,
 
         console.log(result);
 
-        if (result !== undefined && result.is_self === true) {
-          setIsUserProfile(true);
-        }
+        if (result !== undefined) {
+          if (result.is_self === true) {
+            setIsUserProfile(true);
+          }
 
-        setInfo(result);
+          setInfo(result);
+          console.log("Fetched info");
+        }
       } catch (error) {
         console.error("Failed to fetch info:", error);
       }
     };
 
+    if (info !== undefined) {
+      return;
+    }
+
     fetchInfo();
-  }, [db, id, is_user_profile]);
+  }, [info, db, id, is_user_profile]);
 
   if (info === undefined) {
-    return <div>Error getting user info, try to reload</div>;
+    return null;
   }
 
   const handleProfilePictureClick = () => {
@@ -255,12 +264,20 @@ LIMIT 1`,
           ...info,
           back_picture: uploadedHash,
         };
+
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+        }
         setInfo(updatedInfo);
       }
     } catch (error) {
       console.error("Error handling banner file change:", error);
     } finally {
-      setIsBannerUploading(false);
+      // setIsBannerUploading(false);
     }
   };
 
