@@ -94,8 +94,6 @@ function Closet() {
         // Draw the image with proper aspect ratio
         ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 
-        setIsBannerUploading(false);
-
         try {
           const width = canvas.width;
           const height = canvas.height;
@@ -132,6 +130,8 @@ function Closet() {
           } else {
             setImgColorKind("neutral");
           }
+
+          setIsBannerUploading(false);
         } catch (error) {
           console.error("Error analyzing image colors:", error);
         }
