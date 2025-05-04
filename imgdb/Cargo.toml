@@ -6,16 +6,23 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.7.9", features = ["multipart"] }
+axum = { version = "0.7.9", features = ["multipart", "macros"] }
 base16ct = { version = "0.2.0", features = ["alloc"] }
 dotenv = "0.15.0"
 env_logger = "0.11.8"
-image = "0.25.6"
 itertools = "0.12.1"
 log = { version = "0.4.27", features = ["std"] }
 serde = { version = "1.0.219", features = ["derive"] }
 sha2 = "0.10.8"
 tokio = { version = "1.44.2", features = ["full"] }
-tower-http = { version = "0.5.2", features = ["fs", "compression-gzip", "cors"] }
+tower-http = { version = "0.5.2", features = [
+    "fs",
+    "compression-gzip",
+    "cors",
+] }
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
+rmbg.git = "https://github.com/AOx0/rmbg"
+image = "0.25.6"
+tower = "0.5.2"
+jiff = { version = "0.2.12", features = ["tzdb-bundle-always"] }

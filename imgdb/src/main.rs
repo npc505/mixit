@@ -2,15 +2,18 @@ use std::{path::PathBuf, process::ExitCode};
 
 use axum::{
     body::Bytes,
-    extract::{DefaultBodyLimit, Multipart, State},
-    http::{HeaderValue, Method, StatusCode},
+    debug_handler,
+    extract::{DefaultBodyLimit, Multipart, Query, State},
+    http::{header, HeaderValue, Method, StatusCode},
+    middleware,
     routing::put,
     Json,
 };
+use rmbg::Rmbg;
 use tokio::io::AsyncWriteExt;
 use tower_http::cors::CorsLayer;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct ServiceState {
     inner: std::sync::Arc<ServiceInner>,
 }
@@ -23,9 +26,9 @@ impl std::ops::Deref for ServiceState {
     }
 }
 
-#[derive(Debug)]
 struct ServiceInner {
     db_path: PathBuf,
+    rmbg: Rmbg,
 }
 
 impl ServiceState {
@@ -50,9 +53,17 @@ impl ServiceState {
         }
     }
 
-    pub fn new(db: PathBuf) -> Self {
+    pub fn assert_model_exists(model: PathBuf) -> Result<PathBuf, Error> {
+        if (model.exists() && model.is_file()) || !model.exists() {
+            Ok(model)
+        } else {
+            Err(Error::NonExistingPath(model))
+        }
+    }
+
+    pub fn new(db: PathBuf, rmbg: Rmbg) -> Self {
         Self {
-            inner: std::sync::Arc::new(ServiceInner { db_path: db }),
+            inner: std::sync::Arc::new(ServiceInner { db_path: db, rmbg }),
         }
     }
 }
@@ -60,7 +71,9 @@ impl ServiceState {
 #[derive(Debug)]
 enum Error {
     MissingDbToken,
+    MissingModelToken,
     ExistingPath(PathBuf),
+    NonExistingPath(PathBuf),
     CreateDir(PathBuf, std::io::Error),
 }
 
@@ -68,12 +81,22 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::MissingDbToken => {
-                write!(f, "Failed to read var `DB_DIR`")
+                write!(f, "Failed to read env var `DB_DIR`")
+            }
+            Error::MissingModelToken => {
+                write!(f, "Failed to read env var `MODEL`")
             }
             Error::ExistingPath(path) => {
                 write!(
                     f,
                     "There was an error with the existing path {}. E.g. It is not a directory",
+                    path.display()
+                )
+            }
+            Error::NonExistingPath(path) => {
+                write!(
+                    f,
+                    "There was an error with the non-existing path {}.",
                     path.display()
                 )
             }
@@ -105,7 +128,17 @@ async fn app() -> Result<(), Error> {
         return Err(Error::MissingDbToken);
     };
 
-    let state = ServiceState::new(ServiceState::assert_dir_exists(db)?);
+    let model = if let Ok(var) = std::env::var("MODEL") {
+        log::info!("Read MODEL with value {var:?}");
+        var.into()
+    } else {
+        return Err(Error::MissingModelToken);
+    };
+
+    let state = ServiceState::new(
+        ServiceState::assert_dir_exists(db)?,
+        Rmbg::new(ServiceState::assert_model_exists(model)?).expect("Invalid onnx model"),
+    );
 
     let limit = std::env::var("IMG_LIMIT")
         .map(|v| {
@@ -126,7 +159,23 @@ async fn app() -> Result<(), Error> {
         .layer(DefaultBodyLimit::max(limit));
 
     let downloader = axum::Router::new()
-        .fallback_service(tower_http::services::ServeDir::new(state.db_path.as_path()))
+        .fallback_service(
+            tower::ServiceBuilder::new()
+                .layer(middleware::from_fn(async |req, next: middleware::Next| {
+                    let mut response = next.run(req).await;
+                    let now = jiff::Timestamp::now() + jiff::SignedDuration::from_hours(24 * 7);
+
+                    response.headers_mut().insert(
+                        header::EXPIRES,
+                        HeaderValue::from_str(
+                            &now.strftime("%a, %d %b %Y %H:%M:%S GMT").to_string(),
+                        )
+                        .unwrap(),
+                    );
+                    response
+                }))
+                .service(tower_http::services::ServeDir::new(state.db_path.as_path())),
+        )
         .layer(tower_http::compression::CompressionLayer::new());
 
     let router = axum::Router::new()
@@ -146,7 +195,15 @@ struct UploadResponse {
     hashes: Vec<String>,
 }
 
+#[derive(serde::Deserialize)]
+struct UploadRequest {
+    #[serde(default)]
+    rmbg: bool,
+}
+
+#[debug_handler]
 async fn save_img(
+    Query(UploadRequest { rmbg }): Query<UploadRequest>,
     State(state): State<ServiceState>,
     mut mp: Multipart,
 ) -> Result<Json<UploadResponse>, StatusCode> {
@@ -165,21 +222,39 @@ async fn save_img(
         }
 
         let data = field.bytes().await.unwrap();
-        if let Err(err) = image::load_from_memory(&data) {
-            log::debug!("Not saving {name}: {err}");
-            return Err(StatusCode::BAD_REQUEST);
-        }
+        let img = match image::load_from_memory(&data) {
+            Err(err) => {
+                log::debug!("Not saving {name}: {err}");
+                return Err(StatusCode::BAD_REQUEST);
+            }
+            Ok(img) => img,
+        };
+
+        let img = if rmbg {
+            state
+                .rmbg
+                .remove_background(&img)
+                .expect("failed to remove background")
+        } else {
+            img
+        };
+
+        let mut data = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut data);
+
+        img.write_to(&mut cursor, image::ImageFormat::Png)
+            .expect("failed to encode image");
 
         let mut hasher = Sha256::new();
 
-        hasher.update(data.as_ref());
+        hasher.update(&data);
 
         let h = hasher.finalize();
         let h = base16ct::lower::encode_string(&h);
 
         hashes.push(h);
         saved.push(name);
-        bytes.push(data);
+        bytes.push(data.into());
     }
 
     for (hash, bytes) in hashes.iter().zip(bytes) {
