@@ -159,7 +159,16 @@ async fn save_img(
 
     while let Some(field) = mp.next_field().await.unwrap() {
         let name = field.name().unwrap().to_string();
+        let mime_type = field.content_type().unwrap_or("application/octet-stream");
+        if !mime_type.starts_with("image/") {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+
         let data = field.bytes().await.unwrap();
+        if let Err(err) = image::load_from_memory(&data) {
+            log::debug!("Not saving {name}: {err}");
+            return Err(StatusCode::BAD_REQUEST);
+        }
 
         let mut hasher = Sha256::new();
 
@@ -174,9 +183,8 @@ async fn save_img(
     }
 
     for (hash, bytes) in hashes.iter().zip(bytes) {
-        let path: PathBuf = format!("{}/{}", state.db_path.display(), &hash).into();
-
-        match fs::try_exists(&path).await {
+        let new_file_path = state.db_path.join(hash);
+        match fs::try_exists(&new_file_path).await {
             Ok(true) => continue,
             Ok(false) => {}
             Err(e) => {
@@ -190,7 +198,7 @@ async fn save_img(
             .create(true)
             .truncate(true)
             .read(false)
-            .open(&path)
+            .open(&new_file_path)
             .await
             .map_err(|e| {
                 println!("Error: {:?}", e);
