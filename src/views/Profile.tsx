@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useMemo } from "react";
 import { DbContext, Record } from "../surreal";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
@@ -9,6 +9,10 @@ function Closet() {
   const [activeTab, setActiveTab] = useState("all");
   const [imgColorKind, setImgColorKind] = useState("neutral");
   const [is_user_profile, setIsUserProfile] = useState(false);
+  const [clothingItems, setClothingItems] = useState<Record[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cachedItems, setCachedItems] = useState<Record[][]>([]);
+  const [fetchedTabs, setFetchedTabs] = useState<Set<string>>(new Set());
 
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,6 +35,18 @@ function Closet() {
   const [isBannerUploading, setIsBannerUploading] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const tabIndices = useMemo(() => {
+    return {
+      all: 0,
+      top: 1,
+      bot: 2,
+      full: 3,
+      foot: 4,
+      bag: 5,
+      accessory: 6,
+    };
+  }, []);
 
   // Gracias a https://dvmhn07.medium.com/learn-to-detect-image-background-colors-in-react-using-html-canvas-8c2d9e527e7d
   // Basicamente tomamos N pixeles al azar, vemos qué intensidad tiene y después, con el
@@ -206,6 +222,81 @@ LIMIT 1`,
     fetchInfo();
   }, [info, db, id, is_user_profile]);
 
+  useEffect(() => {
+    const fetchClothingItems = async () => {
+      if (!info) return;
+
+      // Avoid re-fetching for tabs that we've already determined have no items
+      if (fetchedTabs.has(activeTab)) {
+        const tabIndex = tabIndices[activeTab as keyof typeof tabIndices];
+        setClothingItems(cachedItems[tabIndex] || []);
+        return;
+      }
+
+      // Check if we already have cached data for this tab
+      const tabIndex = tabIndices[activeTab as keyof typeof tabIndices];
+      if (cachedItems[tabIndex] && cachedItems[tabIndex].length > 0) {
+        console.log(`Using cached data for ${activeTab}`);
+        setClothingItems(cachedItems[tabIndex]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const results = (await db.query(
+          `
+          LET $id = ${
+            is_user_profile
+              ? info.id
+              : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
+              type::thing("usuario", "${id}")
+          } ELSE {
+              fn::search_by_username("${id}")
+          }`
+          };
+
+          SELECT ->sube->${activeTab === "all" ? "prenda" : `(prenda WHERE tipo = '${activeTab}')`} AS prendas FROM ONLY $id FETCH prendas.prenda;
+          `,
+        )) as Record[];
+        const items = results[1];
+        const prendas = {
+          prendas: Array.isArray(items.prendas) ? items.prendas : [],
+        };
+
+        if (prendas && prendas.prendas && Array.isArray(prendas.prendas)) {
+          console.log(prendas.prendas);
+          const newItems = prendas.prendas as Record[];
+          setClothingItems(newItems);
+
+          // Update the cache
+          const newCachedItems = [...cachedItems];
+          newCachedItems[tabIndex] = newItems;
+          setCachedItems(newCachedItems);
+        } else {
+          setClothingItems([]);
+
+          // Cache empty results too
+          const newCachedItems = [...cachedItems];
+          newCachedItems[tabIndex] = [];
+          setCachedItems(newCachedItems);
+        }
+
+        // Mark this tab as fetched to prevent infinite refetching
+        setFetchedTabs((prev) => new Set(prev).add(activeTab));
+      } catch (error) {
+        console.error("Failed to fetch clothing items:", error);
+        setClothingItems([]);
+
+        // Even on error, mark as fetched to prevent infinite retries
+        setFetchedTabs((prev) => new Set(prev).add(activeTab));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClothingItems();
+  }, [db, info, activeTab, id, is_user_profile, fetchedTabs]);
+
   if (info === undefined) {
     return null;
   }
@@ -235,7 +326,7 @@ LIMIT 1`,
     setIsUploading(true);
 
     try {
-      const uploadedHash = await uploadFile(file);
+      const uploadedHash = await uploadFile(file, false);
 
       if (uploadedHash) {
         await db.query(
@@ -265,7 +356,7 @@ LIMIT 1`,
     }
 
     try {
-      const uploadedHash = await uploadFile(file);
+      const uploadedHash = await uploadFile(file, false);
 
       if (uploadedHash) {
         setIsBannerUploading(true);
@@ -526,6 +617,34 @@ LIMIT 1`,
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
+        <div className="mt-4 flex overflow-x-auto pb-4">
+          {isLoading ? (
+            <div className="w-full flex justify-center items-center py-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
+            </div>
+          ) : clothingItems.length > 0 ? (
+            clothingItems.map((item) => (
+              <div
+                key={String(item.id?.id)}
+                className="flex-shrink-0 w-32 mx-1"
+              >
+                <img
+                  src={
+                    item.image_url
+                      ? `${import.meta.env.VITE_IMG_SERVICE_URI}/${item.image_url}`
+                      : ""
+                  }
+                  alt="Clothing item"
+                  className="h-40 w-full object-contain"
+                />
+              </div>
+            ))
+          ) : (
+            <div className="w-full text-center py-10 text-gray-500">
+              No items found in this category
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

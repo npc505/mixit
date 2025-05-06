@@ -1,11 +1,19 @@
-const uploadFile = async (file: File): Promise<string | null> => {
+const uploadFile = async (
+  file: File,
+  rmbg: boolean,
+): Promise<string | null> => {
   if (!file) return null;
 
   const formData = new FormData();
   formData.append("profilePicture", file);
 
   try {
-    const response = await fetch("http://localhost:1234/new", {
+    const url = new URL("http://localhost:1234/new");
+    if (rmbg) {
+      url.searchParams.append("rmbg", "true");
+    }
+
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
     });

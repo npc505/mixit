@@ -12,6 +12,7 @@ import MainLayout from "./layout/MainLayout";
 import Closet from "./views/Profile";
 import ProtectedRoute from "./layout/ProtectedRoute";
 import { ConnectionStatus } from "surrealdb";
+import Upload from "./views/Upload";
 
 function App() {
   const [client, setClient] = useState<Surreal | undefined>(undefined);
@@ -47,6 +48,7 @@ function App() {
           /* Private pages (require sign in) */
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout pad4={false} />}>
+              <Route path="/upload" element={<Upload />} />
               <Route path="/closet" element={<Closet />} />
               <Route path="/closet/:id" element={<Closet />} />
             </Route>
