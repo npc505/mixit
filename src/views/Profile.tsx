@@ -295,7 +295,16 @@ LIMIT 1`,
     };
 
     fetchClothingItems();
-  }, [db, info, activeTab, id, is_user_profile, fetchedTabs]);
+  }, [
+    db,
+    info,
+    activeTab,
+    id,
+    is_user_profile,
+    fetchedTabs,
+    tabIndices,
+    cachedItems,
+  ]);
 
   if (info === undefined) {
     return null;
