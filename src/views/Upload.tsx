@@ -123,11 +123,11 @@ function Upload() {
 
             <div className="flex gap-4">
               <Button
-                label="Discard"
+                label="Descartar"
                 isActive={false}
                 onClick={() => setUploadedImage(null)}
               />
-              <Button label="Save" isActive={true} onClick={handleSave} />
+              <Button label="Guardar" isActive={true} onClick={handleSave} />
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ function Upload() {
                     <circle cx="12" cy="13" r="3"></circle>
                   </svg>
                   <span className="text-gray-500 font-medium">
-                    Upload Picture
+                    Elegir prenda
                   </span>
                 </>
               )}
