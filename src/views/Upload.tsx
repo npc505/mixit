@@ -3,9 +3,11 @@ import { DbContext } from "../surreal";
 import uploadFile from "../files/upload";
 import Button from "../components/Button";
 import PrivacyToggle from "../components/PrivacyToggle";
+import { useNavigate } from "react-router-dom";
 
 function Upload() {
   const db = useContext(DbContext);
+  const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<
@@ -48,6 +50,7 @@ function Upload() {
 
       // Reset state after successful save
       setUploadedImage(null);
+      navigate(-1);
     } catch (error) {
       console.error("Error saving item:", error);
     }
@@ -55,6 +58,27 @@ function Upload() {
 
   return (
     <div className="flex flex-col items-center justify-center flex-grow h-full min-h-[calc(100vh-130px)] relative">
+      <div className="absolute top-0 left-0 p-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+
       <div className="absolute top-0 right-0 p-4">
         <PrivacyToggle isPrivate={isPrivate} onChange={handlePrivacyChange} />
       </div>
@@ -75,7 +99,17 @@ function Upload() {
               <label className="font-medium">Type:</label>
               <select
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as any)}
+                onChange={(e) =>
+                  setSelectedType(
+                    e.target.value as
+                      | "top"
+                      | "bot"
+                      | "full"
+                      | "foot"
+                      | "bag"
+                      | "accessory",
+                  )
+                }
                 className="flex-grow px-3 py-1 rounded-full bg-white border-2 border-black focus:outline-none"
               >
                 <option value="top">Top</option>

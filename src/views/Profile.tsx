@@ -611,7 +611,16 @@ LIMIT 1`,
           </div>
         </div>
       </div>
-      <div className="p-4 pt-10">
+      {is_user_profile && (
+        <div className="flex justify-end mt-4 mr-4">
+          <Button
+            onClick={() => (window.location.href = "/upload")}
+            label="Subir nueva prenda"
+            isActive={true}
+          />
+        </div>
+      )}
+      <div className="p-4 pt-4">
         <TabGrid
           tabs={tabs}
           activeTab={activeTab}
