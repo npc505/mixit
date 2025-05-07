@@ -18,6 +18,10 @@ const uploadFile = async (
       body: formData,
     });
 
+    if (response.status === 400) {
+      throw new Error("Unsupported image format");
+    }
+
     const result = await response.json();
     console.log("Upload result:", result);
 
@@ -34,6 +38,13 @@ const uploadFile = async (
       return null;
     }
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "Unsupported image format"
+    ) {
+      console.error(error.message);
+      throw error;
+    }
     console.error("Error uploading profile picture:", error);
     return null;
   }

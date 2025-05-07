@@ -582,6 +582,7 @@ LIMIT 1`,
                   setInfo((prev) =>
                     prev ? { ...prev, error: false } : undefined,
                   );
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (error) {
                   setInfo((prev) =>
                     prev ? { ...prev, error: true } : undefined,
@@ -649,6 +650,8 @@ LIMIT 1`,
             clothingItems.map((item) => (
               <div key={String(item.id?.id)}>
                 <Prenda
+                  user={info}
+                  is_user_profile={is_user_profile}
                   item={item}
                   onRemove={(item: Record) => {
                     setClothingItems(

@@ -1,17 +1,20 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { DbContext, Record } from "../surreal";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 function Prenda({
+  user,
+  is_user_profile,
   item,
   onRemove,
   onChange,
 }: {
+  user: Record;
+  is_user_profile: boolean;
   item: Record;
   onRemove?: (item: Record) => void;
   onChange?: (before: Record, after: Record) => void;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const db = useContext(DbContext);
 
   const handleRemove = async () => {
@@ -39,53 +42,82 @@ function Prenda({
   return (
     <motion.div
       layout
-      className={`flex flex-shrink-0 mx-1 flex-row hover:bg-gray-100 rounded-md p-1 ${
-        isExpanded ? "bg-gray-100" : ""
-      }`}
+      className="relative flex flex-shrink-0 mx-1 flex-row hover:bg-gray-50 rounded-md p-1 group"
     >
       <motion.img
-        layoutId={`image-${item.id}`}
         src={
           item.image_url
             ? `${import.meta.env.VITE_IMG_SERVICE_URI}/${item.image_url}`
             : ""
         }
-        onClick={() => setIsExpanded(!isExpanded)}
         alt="Clothing item"
         className="h-40 w-32 object-contain"
       />
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20, width: 0 }}
-            transition={{ duration: 0.5 }}
-            className="ml-2 flex flex-col space-y-2 overflow-hidden"
+      {(is_user_profile || user.id === item.owner) && (
+        <div className="absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleToggleVisibility}
+            className="text-black text-sm"
           >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleRemove}
-              className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+            {item.public ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            )}
+          </motion.button>
+        </div>
+      )}
+      {(is_user_profile || user.id === item.owner) && (
+        <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRemove}
+            className="text-black text-sm"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              Remove
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleToggleVisibility}
-              className={`px-2 py-1 rounded text-xs ${
-                item.public
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-500 text-white"
-              }`}
-            >
-              {item.public ? "Public" : "Private"}
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   );
 }

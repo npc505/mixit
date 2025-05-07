@@ -14,6 +14,7 @@ function Upload() {
     "top" | "bot" | "full" | "foot" | "bag" | "accessory"
   >("top");
   const [isPrivate, setIsPrivate] = useState(true);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -22,6 +23,7 @@ function Upload() {
     if (!file) return;
 
     setIsUploading(true);
+    setUploadError(null);
 
     try {
       const uploadedHash = await uploadFile(file, true);
@@ -31,6 +33,7 @@ function Upload() {
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      setUploadError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsUploading(false);
     }
@@ -82,6 +85,12 @@ function Upload() {
       <div className="absolute top-0 right-0 p-4">
         <PrivacyToggle isPrivate={isPrivate} onChange={handlePrivacyChange} />
       </div>
+
+      {uploadError && (
+        <div className="text-red-500 mb-4 text-center max-w-64">
+          {uploadError}
+        </div>
+      )}
 
       {uploadedImage ? (
         <div className="flex flex-col items-center gap-4">
