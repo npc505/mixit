@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, KeyboardEvent } from "react";
 import { DbContext, Record } from "../surreal";
 import uploadFile from "../files/upload";
 import Button from "../components/Button";
@@ -17,6 +17,7 @@ function Upload() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState<string>("");
+  const [tagError, setTagError] = useState<string | null>(null);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -56,6 +57,13 @@ function Upload() {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  const handleTagInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      addTag();
+    }
+  };
+
   const handleSave = async () => {
     if (!uploadedImage) return;
 
@@ -73,14 +81,23 @@ function Upload() {
 
       // Tag the prenda with each tag
       for (const tag of tags) {
-        await db.query(
-          `SELECT * FROM fn::tag_something_with_str(${prendaId}, "${tag}");`,
-        );
+        try {
+          await db.query(
+            `SELECT * FROM fn::tag_something_with_str(${prendaId}, "${tag}");`,
+          );
+        } catch (tagError) {
+          console.error("Error creating tag:", tagError);
+          // setTagError(
+          //   tagError instanceof Error ? tagError.message : String(tagError),
+          // );
+          // return;
+        }
       }
 
       // Reset state after successful save
       setUploadedImage(null);
       setTags([]);
+      setTagError(null);
       navigate(-1);
     } catch (error) {
       console.error("Error saving item:", error);
@@ -121,7 +138,7 @@ function Upload() {
       )}
 
       {uploadedImage ? (
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center justify-center gap-4 w-full">
           <div
             className="w-64 h-64 rounded-lg overflow-hidden"
             style={{
@@ -132,7 +149,7 @@ function Upload() {
             }}
           />
           <div className="flex flex-col items-center gap-4 w-full">
-            <div className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-2 xs:w-full w-2/5">
               <label className="font-medium">Type:</label>
               <select
                 value={selectedType}
@@ -158,37 +175,45 @@ function Upload() {
               </select>
             </div>
 
-            <div className="flex flex-col items-center gap-2 w-full">
+            <div className="flex flex-col items-center gap-2 xs:w-full w-2/5">
+              {tagError && (
+                <div className="text-red-500 text-sm mb-2">{tagError}</div>
+              )}
               <div className="flex items-center gap-2 w-full">
                 <input
                   type="text"
                   value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  placeholder="Add a tag"
+                  onChange={(e) => {
+                    setCurrentTag(e.target.value);
+                    if (
+                      e.target.value.includes(" ") ||
+                      e.target.value.includes(",")
+                    ) {
+                      addTag();
+                    }
+                  }}
+                  onKeyDown={handleTagInputKeyDown}
+                  placeholder="Agregar etiqueta(s)"
                   className="flex-grow px-3 py-1 rounded-full bg-white border-2 border-black focus:outline-none"
                 />
-                <button
-                  onClick={addTag}
-                  className="bg-black text-white px-3 py-1 rounded-full"
-                >
-                  Add
-                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="bg-gray-200 px-2 py-1 rounded-full flex items-center gap-2"
-                  >
-                    {tag}
-                    <button
-                      onClick={() => removeTag(tag)}
-                      className="text-red-500"
+              <div className="max-h-20 overflow-y-auto w-full">
+                <div className="flex flex-wrap gap-2 items-center">
+                  {tags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="bg-gray-200 px-2 rounded-full flex items-center gap-1"
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      {tag}
+                      <span
+                        onClick={() => removeTag(tag)}
+                        className="text-gray-500 cursor-pointer text-xs"
+                      >
+                        ✕
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -196,7 +221,10 @@ function Upload() {
               <Button
                 label="Descartar"
                 isActive={false}
-                onClick={() => setUploadedImage(null)}
+                onClick={() => {
+                  setUploadedImage(null);
+                  setTags([]);
+                }}
               />
               <Button label="Guardar" isActive={true} onClick={handleSave} />
             </div>
