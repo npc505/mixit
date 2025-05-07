@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { DbContext } from "../surreal";
+import { DbContext, Record } from "../surreal";
 import uploadFile from "../files/upload";
 import Button from "../components/Button";
 import PrivacyToggle from "../components/PrivacyToggle";
@@ -15,6 +15,8 @@ function Upload() {
   >("top");
   const [isPrivate, setIsPrivate] = useState(true);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [currentTag, setCurrentTag] = useState<string>("");
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -43,16 +45,42 @@ function Upload() {
     setIsPrivate(newIsPrivate);
   };
 
+  const addTag = () => {
+    if (currentTag.trim() && !tags.includes(currentTag.trim())) {
+      setTags([...tags, currentTag.trim()]);
+      setCurrentTag("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
   const handleSave = async () => {
     if (!uploadedImage) return;
 
     try {
-      await db.query(
-        `SELECT * FROM fn::create_prenda("${uploadedImage}", "${selectedType}", ${!isPrivate});`,
-      );
+      const createPrendaResult = (
+        (await db.query(
+          `SELECT * FROM fn::create_prenda("${uploadedImage}", "${selectedType}", ${!isPrivate});`,
+        )) as Record[][]
+      )[0];
+
+      console.log(createPrendaResult);
+
+      // Get the ID of the newly created prenda
+      const prendaId = createPrendaResult[0].id;
+
+      // Tag the prenda with each tag
+      for (const tag of tags) {
+        await db.query(
+          `SELECT * FROM fn::tag_something_with_str(${prendaId}, "${tag}");`,
+        );
+      }
 
       // Reset state after successful save
       setUploadedImage(null);
+      setTags([]);
       navigate(-1);
     } catch (error) {
       console.error("Error saving item:", error);
@@ -128,6 +156,40 @@ function Upload() {
                 <option value="bag">Bag</option>
                 <option value="accessory">Accessory</option>
               </select>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 w-full">
+              <div className="flex items-center gap-2 w-full">
+                <input
+                  type="text"
+                  value={currentTag}
+                  onChange={(e) => setCurrentTag(e.target.value)}
+                  placeholder="Add a tag"
+                  className="flex-grow px-3 py-1 rounded-full bg-white border-2 border-black focus:outline-none"
+                />
+                <button
+                  onClick={addTag}
+                  className="bg-black text-white px-3 py-1 rounded-full"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="bg-gray-200 px-2 py-1 rounded-full flex items-center gap-2"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => removeTag(tag)}
+                      className="text-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-4">
