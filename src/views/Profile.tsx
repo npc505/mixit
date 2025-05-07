@@ -4,6 +4,7 @@ import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
 import { useParams } from "react-router-dom";
 import Button from "../components/Button";
+import Prenda from "../components/Prenda";
 
 function Closet() {
   const [activeTab, setActiveTab] = useState("all");
@@ -578,9 +579,13 @@ LIMIT 1`,
                       `/closet/${newUsername}`,
                     );
                   }
-                  setInfo((prev) => ({ ...prev, error: false }));
+                  setInfo((prev) =>
+                    prev ? { ...prev, error: false } : undefined,
+                  );
                 } catch (error) {
-                  setInfo((prev) => ({ ...prev, error: true }));
+                  setInfo((prev) =>
+                    prev ? { ...prev, error: true } : undefined,
+                  );
                 }
               }}
             />
@@ -642,18 +647,20 @@ LIMIT 1`,
             </div>
           ) : clothingItems.length > 0 ? (
             clothingItems.map((item) => (
-              <div
-                key={String(item.id?.id)}
-                className="flex-shrink-0 w-32 mx-1"
-              >
-                <img
-                  src={
-                    item.image_url
-                      ? `${import.meta.env.VITE_IMG_SERVICE_URI}/${item.image_url}`
-                      : ""
-                  }
-                  alt="Clothing item"
-                  className="h-40 w-full object-contain"
+              <div key={String(item.id?.id)}>
+                <Prenda
+                  item={item}
+                  onRemove={(item: Record) => {
+                    setClothingItems(
+                      clothingItems.filter((i) => i.id !== item.id),
+                    );
+                  }}
+                  onChange={(before: Record, after: Record) => {
+                    const updatedItems = clothingItems.map((i) =>
+                      i.id === before.id ? after : i,
+                    );
+                    setClothingItems(updatedItems);
+                  }}
                 />
               </div>
             ))
