@@ -441,11 +441,6 @@ LIMIT 1`,
 
   return (
     <div>
-      {is_user_profile && (
-        <p className="text-4xl font-bold text-left font-poppins p-4">
-          My Closet
-        </p>
-      )}
       <div
         className="w-full h-[50vh] relative flex flex-col items-center justify-center"
         style={{
@@ -626,8 +621,14 @@ LIMIT 1`,
           </div>
         </div>
       </div>
+      {!is_user_profile && (
+        <div className="flex justify-between items-center p-4">
+          <p className="text-4xl font-bold font-poppins">Closet</p>
+        </div>
+      )}
       {is_user_profile && (
-        <div className="flex justify-end mt-4 mr-4">
+        <div className="flex justify-between items-center p-4">
+          <p className="text-4xl font-bold font-poppins">My Closet</p>
           <Button
             onClick={() => (window.location.href = "/upload")}
             label="Subir nueva prenda"
@@ -635,13 +636,13 @@ LIMIT 1`,
           />
         </div>
       )}
-      <div className="p-4 pt-4">
+      <div>
         <TabGrid
           tabs={tabs}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
-        <div className="mt-4 flex overflow-x-auto pb-4">
+        <div className="flex overflow-x-auto p-4">
           {isLoading ? (
             <div className="w-full flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>

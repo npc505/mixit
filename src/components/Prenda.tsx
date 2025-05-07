@@ -58,7 +58,8 @@ function Prenda({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleToggleVisibility}
-            className="text-black text-sm"
+            className="text-black text-sm cursor-pointer"
+            title={item.public ? "Make item private" : "Make item public"}
           >
             {item.public ? (
               <svg
@@ -99,7 +100,8 @@ function Prenda({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleRemove}
-            className="text-black text-sm"
+            className="text-black text-sm cursor-pointer"
+            title="Remove item"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
