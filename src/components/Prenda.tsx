@@ -1,21 +1,42 @@
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { DbContext, Record } from "../surreal";
 import { motion } from "framer-motion";
+import { RecordId } from "surrealdb";
 
 function Prenda({
+  auth,
   user,
-  is_user_profile,
+  is_wished_item,
   item,
   onRemove,
   onChange,
 }: {
+  auth: Record;
   user: Record;
-  is_user_profile: boolean;
-  item: Record;
+  is_wished_item?: boolean;
+  item: Record & { owner: RecordId<string> };
   onRemove?: (item: Record) => void;
   onChange?: (before: Record, after: Record) => void;
 }) {
   const db = useContext(DbContext);
+  const [isWished, setIsWished] = useState(is_wished_item ?? false);
+
+  useEffect(() => {
+    const checkWishStatus = async () => {
+      if (!db || !item || !item.id || !user || !user.id) return;
+      try {
+        const result = await db.query(
+          `SELECT id FROM ${user.id}->wishes WHERE out = ${item.id} LIMIT 1`,
+        );
+        const wishedRelations = result?.[0] as any[] | undefined;
+        setIsWished(wishedRelations && wishedRelations.length > 0);
+      } catch (error) {
+        console.error("Error checking wish status:", error);
+      }
+    };
+
+    checkWishStatus();
+  }, [db, item?.id, user?.id]); // Re-run effect if item or user changes
 
   const handleRemove = async () => {
     try {
@@ -39,6 +60,23 @@ function Prenda({
     }
   };
 
+  const handleToggleWish = async () => {
+    if (!db || !item || !item.id) return;
+    try {
+      if (isWished) {
+        await db.query(`fn::unwish(${item.id})`);
+        setIsWished(false);
+        console.log("Unwished item:", item.id);
+      } else {
+        await db.query(`fn::wish(${item.id})`);
+        setIsWished(true);
+        console.log("Wished item:", item.id);
+      }
+    } catch (error) {
+      console.error("Error toggling wish status:", error);
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -53,7 +91,7 @@ function Prenda({
         alt="Clothing item"
         className="h-40 w-32 object-contain"
       />
-      {(is_user_profile || user.id === item.owner) && (
+      {auth.id.id === item.owner.id && (
         <div className="absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -95,7 +133,7 @@ function Prenda({
           </motion.button>
         </div>
       )}
-      {(is_user_profile || user.id === item.owner) && (
+      {auth.id.id === item.owner.id && (
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -116,6 +154,32 @@ function Prenda({
             >
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </motion.button>
+        </div>
+      )}
+      {auth.id.id !== item.owner.id && (
+        <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleToggleWish}
+            className="text-black text-sm cursor-pointer" // Changed to black
+            title={isWished ? "Remove from wishlist" : "Add to wishlist"} // Dynamic title
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              // Fill based on state, stroke for outline
+              fill={isWished ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="feather feather-heart"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
           </motion.button>
         </div>

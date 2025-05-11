@@ -15,6 +15,10 @@ function Closet() {
   const [cachedItems, setCachedItems] = useState<Record[][]>([]);
   const [fetchedTabs, setFetchedTabs] = useState<Set<string>>(new Set());
 
+  const [wishedItems, setWishedItems] = useState<Record[]>([]);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [authInfo, setAuthInfo] = useState<Record>();
+
   const db = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +52,26 @@ function Closet() {
       accessory: 6,
     };
   }, []);
+
+  useEffect(() => {
+    const fetchAuthInfo = async () => {
+      try {
+        const info = await db.info();
+
+        if (info === undefined) {
+          throw new Error("Authentication information could not be retrieved.");
+        }
+
+        setAuthInfo(info);
+      } catch (error) {
+        console.error("Failed to fetch auth info:", error);
+      }
+    };
+
+    if (authInfo === undefined) {
+      fetchAuthInfo();
+    }
+  }, [db, setAuthInfo, authInfo]);
 
   // Gracias a https://dvmhn07.medium.com/learn-to-detect-image-background-colors-in-react-using-html-canvas-8c2d9e527e7d
   // Basicamente tomamos N pixeles al azar, vemos qué intensidad tiene y después, con el
@@ -306,6 +330,55 @@ LIMIT 1`,
     tabIndices,
     cachedItems,
   ]);
+
+  useEffect(() => {
+    const fetchWishedItems = async () => {
+      if (!info) return;
+
+      setIsWishlistLoading(true);
+      try {
+        const results = (await db.query(
+          `
+          LET $id = ${
+            is_user_profile
+              ? info.id
+              : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
+              type::thing("usuario", "${id}")
+          } ELSE {
+              fn::search_by_username("${id}")
+          }`
+          };
+
+          SELECT ->wishes->prenda AS wished_items FROM ONLY $id FETCH wished_items;
+          `,
+        )) as Record[];
+
+        const items = results[1];
+        const wished = {
+          wished_items: Array.isArray(items.wished_items)
+            ? items.wished_items
+            : [],
+        };
+
+        if (
+          wished &&
+          wished.wished_items &&
+          Array.isArray(wished.wished_items)
+        ) {
+          setWishedItems(wished.wished_items as Record[]);
+        } else {
+          setWishedItems([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch wished items:", error);
+        setWishedItems([]);
+      } finally {
+        setIsWishlistLoading(false);
+      }
+    };
+
+    fetchWishedItems();
+  }, [db, info, id, is_user_profile]);
 
   if (info === undefined) {
     return null;
@@ -652,7 +725,7 @@ LIMIT 1`,
               <div key={String(item.id?.id)}>
                 <Prenda
                   user={info}
-                  is_user_profile={is_user_profile}
+                  auth={authInfo}
                   item={item}
                   onRemove={(item: Record) => {
                     setClothingItems(
@@ -671,6 +744,51 @@ LIMIT 1`,
           ) : (
             <div className="w-full text-center py-10 text-gray-500">
               No items found in this category
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between items-center p-4">
+          <p className="text-4xl font-bold font-poppins">Wishlist</p>
+        </div>
+        <div className="flex overflow-x-auto p-4">
+          {isWishlistLoading ? (
+            <div className="w-full flex justify-center items-center py-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
+            </div>
+          ) : wishedItems.length > 0 ? (
+            wishedItems.map((item) => (
+              <div key={String(item.id?.id)}>
+                <Prenda
+                  user={info}
+                  auth={authInfo}
+                  item={item}
+                  is_wished_item={true}
+                  onRemove={async (item: Record) => {
+                    try {
+                      await db.query(
+                        `SELECT * FROM ONLY fn::unwish(${String(item.id)}) LIMIT 1;`,
+                      );
+                      setWishedItems(
+                        wishedItems.filter((i) => i.id !== item.id),
+                      );
+                    } catch (error) {
+                      console.error("Error unwishing item:", error);
+                    }
+                  }}
+                  onChange={() => {}}
+                />
+              </div>
+            ))
+          ) : info?.wishlist_public === false && !is_user_profile ? (
+            <div className="w-full text-center py-10 text-gray-500">
+              Wishlist is private.
+            </div>
+          ) : (
+            <div className="w-full text-center py-10 text-gray-500">
+              No items found in the wishlist.
             </div>
           )}
         </div>

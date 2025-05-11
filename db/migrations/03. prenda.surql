@@ -11,7 +11,7 @@ DEFINE TABLE prenda TYPE NORMAL SCHEMAFULL
 
 DEFINE FIELD owner ON prenda TYPE record<usuario> READONLY
     PERMISSIONS
-        FOR select NONE,
+        FOR select WHERE owner = $auth.id OR public = true
         FOR create, update, delete WHERE owner = $auth.id
 ;
 
