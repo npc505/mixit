@@ -1,12 +1,7 @@
 import Gallery from "../components/Gallery";
 import { DbContext } from "../surreal";
 import { useContext, useState } from "react";
-import {
-  handleGoogleCallback,
-  loadGoogleScript,
-  Method,
-  register,
-} from "../surreal/auth";
+import { handleGoogleCallback, Method, register } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
@@ -19,24 +14,21 @@ function Register() {
   const db = useContext(DbContext);
   const navigate = useNavigate();
 
-  loadGoogleScript(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: async (res: unknown) => {
-          if (await handleGoogleCallback(res, db, Method.Register)) {
-            navigate("/explore");
-          }
-        },
-      });
+  const googleCallback = async (res: unknown) => {
+    const success = await handleGoogleCallback(res, db, Method.Register);
+    if (success) {
+      navigate("/explore");
     }
-  });
+    return success;
+  };
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 p-8 m-2 md:m-24 lg:m-24 gap-8 items-center justify-center">
-        <div className="px-4 md:px-20 lg:px-20">
-          <p className="text-4xl text-black font-bold text-center font-poppins pb-10">
+    <div className="flex items-center justify-center min-h-screen py-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 p-8 mx-4 md:mx-8 my-4 gap-8 items-center justify-center max-w-6xl w-full">
+        <div className="px-4 md:px-8 lg:px-12">
+          {" "}
+          <p className="text-3xl md:text-4xl text-black font-bold text-center font-poppins pb-8">
+            {" "}
             Create an account
           </p>
           <div className="relative z-0 w-full mb-5 group">
@@ -55,8 +47,8 @@ function Register() {
           </div>
           <div className="relative z-0 w-full mb-5 group">
             <input
-              name="floating_email"
-              id="floating_email"
+              name="floating_username"
+              id="floating_username"
               className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
               placeholder=" "
               required
@@ -70,8 +62,8 @@ function Register() {
           <div className="relative z-0 w-full mb-5 group">
             <input
               type="password"
-              name="floating_email"
-              id="floating_email"
+              name="floating_password"
+              id="floating_password"
               className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
               placeholder=" "
               required
@@ -85,8 +77,8 @@ function Register() {
           <div className="relative z-0 w-full mb-5 group">
             <input
               type="password"
-              name="floating_email"
-              id="floating_email"
+              name="floating_confirm_password"
+              id="floating_confirm_password"
               className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
               placeholder=" "
               required
@@ -97,9 +89,18 @@ function Register() {
               Confirm Password
             </label>
           </div>
-          <div className="flex flex-col items-center justify-center pt-8">
+          <div className="flex flex-col items-center justify-center pt-6">
+            {" "}
             <Button
               onClick={async () => {
+                if (password !== confirmPassword) {
+                  alert("Passwords do not match!");
+                  return;
+                }
+                if (!email || !username || !password) {
+                  alert("Please fill in all fields.");
+                  return;
+                }
                 const res = await register(db, {
                   username,
                   email,
@@ -107,23 +108,33 @@ function Register() {
                 });
                 if (res === true) {
                   navigate("/explore");
+                } else {
+                  alert("Registration failed. Please try again.");
                 }
               }}
-              isActive={true}
+              isActive={
+                email &&
+                username &&
+                password &&
+                confirmPassword &&
+                password === confirmPassword
+              }
               label="Register"
             />
-
-            <div className="flex items-center justify-center w-full py-12">
-              <div className="w-28 md:w-60 lg:w-60 border-t border-gray-300"></div>
-              <span className="mx-4 text-gray-500 cursor-pointer">
+            <div className="flex items-center justify-center w-full py-8">
+              {" "}
+              <div className="flex-grow border-t border-gray-300"></div>{" "}
+              <span className="mx-4 text-gray-500 text-sm">
+                {" "}
                 or register with
               </span>
-              <div className="w-28 md:w-60 lg:w-60 border-t border-gray-300"></div>
+              <div className="flex-grow border-t border-gray-300"></div>{" "}
             </div>
-            <GoogleAuth />
+            <GoogleAuth callback={googleCallback} />
           </div>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-8 md:pt-0">
+          {" "}
           <Gallery />
         </div>
       </div>

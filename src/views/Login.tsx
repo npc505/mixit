@@ -1,10 +1,6 @@
 import { DbContext, login } from "../surreal";
 import { useState, useEffect, useContext } from "react";
-import {
-  handleGoogleCallback,
-  loadGoogleScript,
-  Method,
-} from "../surreal/auth";
+import { handleGoogleCallback, Method } from "../surreal/auth";
 import GoogleAuth from "../components/GoogleAuth";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
@@ -26,18 +22,13 @@ function Login() {
     return () => clearTimeout(timer);
   }, []);
 
-  loadGoogleScript(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: async (res: unknown) => {
-          if (await handleGoogleCallback(res, db, Method.Register)) {
-            navigate("/explore");
-          }
-        },
-      });
+  const googleCallback = async (res: unknown) => {
+    const success = await handleGoogleCallback(res, db, Method.Login);
+    if (success) {
+      navigate("/explore");
     }
-  });
+    return success;
+  };
 
   return (
     <div className="flex-grow grid grid-cols-1 justify-center items-center">
@@ -108,7 +99,7 @@ function Login() {
               </span>
               <div className="w-full border-t border-gray-300"></div>
             </div>
-            <GoogleAuth />
+            <GoogleAuth callback={googleCallback} />
           </div>
         </div>
       </div>

@@ -1,15 +1,68 @@
-import { FcGoogle } from "react-icons/fc";
-import { handleGoogleSignIn } from "../surreal/auth";
+import { useEffect, useRef, useState } from "react";
+import { loadGoogleScript } from "../surreal/auth";
 
-const GoogleAuth = () => {
+interface GoogleAuthProps {
+  callback: (response: unknown) => Promise<boolean>;
+}
+
+const GoogleAuth = ({ callback }: GoogleAuthProps) => {
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [isGoogleApiReady, setIsGoogleApiReady] = useState(false);
+  const isInitialized = useRef(false);
+
+  useEffect(() => {
+    if (isInitialized.current) {
+      setIsGoogleApiReady(true);
+      return;
+    }
+
+    loadGoogleScript(() => {
+      if (
+        window.google &&
+        window.google.accounts &&
+        window.google.accounts.id
+      ) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: callback,
+          });
+          isInitialized.current = true;
+          setIsGoogleApiReady(true);
+        } catch (error) {
+          console.error("Error initializing Google API:", error);
+          setIsGoogleApiReady(false);
+        }
+      } else {
+        console.warn("Google API not found after script load attempt.");
+        setIsGoogleApiReady(false);
+      }
+    });
+  }, [callback]);
+
+  useEffect(() => {
+    if (isGoogleApiReady && googleButtonRef.current) {
+      try {
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          type: "standard",
+          shape: "rectangular",
+          text: "signup_with",
+          logo_alignment: "left",
+          width: 240,
+        });
+      } catch (error) {
+        console.error("Error rendering Google button:", error);
+      }
+    }
+  }, [isGoogleApiReady, googleButtonRef.current]);
+
   return (
     <div className="flex flex-row justify-center items-center gap-4">
-      <button className="flex flex-row justify-center items-center gap-2 rounded-full border-2 border-white px-8 py-2 bg-gray-100 hover:bg-gray-200 cursor-pointer">
-        <FcGoogle style={{ width: "30px", height: "30px" }} />
-        <p className="text-black" onClick={handleGoogleSignIn}>
-          Google
-        </p>
-      </button>
+      <div ref={googleButtonRef}>
+        {!isGoogleApiReady && <span>Loading Google button...</span>}
+      </div>
     </div>
   );
 };
