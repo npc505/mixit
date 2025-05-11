@@ -26,7 +26,7 @@ function Prenda({
       if (!db || !item || !item.id || !user || !user.id) return;
       try {
         const result = await db.query(
-          `SELECT id FROM ${user.id}->wishes WHERE out = ${item.id} LIMIT 1`,
+          `SELECT id FROM ${auth.id}->wishes WHERE out = ${item.id} LIMIT 1`,
         );
         const wishedRelations = result?.[0] as any[] | undefined;
         setIsWished(wishedRelations && wishedRelations.length > 0);
@@ -76,6 +76,8 @@ function Prenda({
       console.error("Error toggling wish status:", error);
     }
   };
+
+  console.log(item);
 
   return (
     <motion.div

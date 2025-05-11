@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, useRef, useMemo } from "react";
-import { DbContext, Record } from "../surreal";
+import { DbContext, Record, RecordId } from "../surreal";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
 import { useParams } from "react-router-dom";
@@ -15,7 +15,9 @@ function Closet() {
   const [cachedItems, setCachedItems] = useState<Record[][]>([]);
   const [fetchedTabs, setFetchedTabs] = useState<Set<string>>(new Set());
 
-  const [wishedItems, setWishedItems] = useState<Record[]>([]);
+  const [wishedItems, setWishedItems] = useState<
+    (Record & { owner: RecordId<string> })[]
+  >([]);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [authInfo, setAuthInfo] = useState<Record>();
 
@@ -79,7 +81,7 @@ function Closet() {
   useEffect(() => {
     const updateBannerImage = async () => {
       const canvas = canvasRef.current;
-      if (!canvas || !info?.back_picture) {
+      if (!canvas || typeof info?.back_picture !== "string") {
         return;
       }
 
@@ -92,7 +94,7 @@ function Closet() {
 
       const image = new Image();
       image.crossOrigin = "Anonymous";
-      image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info?.back_picture}`;
+      image.src = `${import.meta.env.VITE_IMG_SERVICE_URI}/${info.back_picture}`;
 
       // Gracias a Karlita por la lógica para que no se distorsione la imagen
       image.onload = () => {
@@ -190,6 +192,13 @@ function Closet() {
       };
     };
 
+    // Only start banner upload state if there is a picture
+    if (typeof info?.back_picture === "string") {
+      setIsBannerUploading(true);
+    } else {
+      setIsBannerUploading(false);
+    }
+
     updateBannerImage();
   }, [info?.back_picture]);
 
@@ -274,13 +283,13 @@ LIMIT 1`,
             is_user_profile
               ? info.id
               : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
-              type::thing("usuario", "${id}")
-          } ELSE {
-              fn::search_by_username("${id}")
-          }`
+                    type::thing("usuario", "${id}")
+                } ELSE {
+                    fn::search_by_username("${id}")
+                }`
           };
 
-          SELECT ->sube->${activeTab === "all" ? "prenda" : `(prenda WHERE tipo = '${activeTab}')`} AS prendas FROM ONLY $id FETCH prendas.prenda;
+          SELECT ->sube->prenda ${activeTab === "all" ? "" : `WHERE tipo = '${activeTab}'`} AS prendas FROM ONLY $id FETCH prendas.prenda;
           `,
         )) as Record[];
         const items = results[1];
@@ -291,11 +300,16 @@ LIMIT 1`,
         if (prendas && prendas.prendas && Array.isArray(prendas.prendas)) {
           console.log(prendas.prendas);
           const newItems = prendas.prendas as Record[];
-          setClothingItems(newItems);
+          // Add the owner field to each item
+          const itemsWithOwner = newItems.map((item) => ({
+            ...item,
+            owner: info.id, // The owner is the profile user
+          })) as (Record & { owner: RecordId<string> })[]; // Cast for type safety
+          setClothingItems(itemsWithOwner);
 
           // Update the cache
           const newCachedItems = [...cachedItems];
-          newCachedItems[tabIndex] = newItems;
+          newCachedItems[tabIndex] = itemsWithOwner;
           setCachedItems(newCachedItems);
         } else {
           setClothingItems([]);
@@ -339,7 +353,7 @@ LIMIT 1`,
       try {
         const results = (await db.query(
           `
-          LET $id = ${
+          LET $profile_id = ${
             is_user_profile
               ? info.id
               : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
@@ -349,26 +363,14 @@ LIMIT 1`,
           }`
           };
 
-          SELECT ->wishes->prenda AS wished_items FROM ONLY $id FETCH wished_items;
+
+          SELECT VALUE wished FROM ONLY (SELECT ->wishes->prenda.* AS wished FROM ONLY $profile_id);
           `,
-        )) as Record[];
+        )) as (Record & { owner: RecordId<string> })[];
 
-        const items = results[1];
-        const wished = {
-          wished_items: Array.isArray(items.wished_items)
-            ? items.wished_items
-            : [],
-        };
+        const items = Array.isArray(results[1]) ? results[1] : [];
 
-        if (
-          wished &&
-          wished.wished_items &&
-          Array.isArray(wished.wished_items)
-        ) {
-          setWishedItems(wished.wished_items as Record[]);
-        } else {
-          setWishedItems([]);
-        }
+        setWishedItems(items);
       } catch (error) {
         console.error("Failed to fetch wished items:", error);
         setWishedItems([]);
@@ -442,13 +444,14 @@ LIMIT 1`,
       const uploadedHash = await uploadFile(file, false);
 
       if (uploadedHash) {
-        setIsBannerUploading(true);
+        setIsBannerUploading(true); // Keep loading state until image is rendered and analyzed
         await db.query(`UPDATE $auth.id SET back_picture = "${uploadedHash}"`);
         const updatedInfo = {
           ...info,
           back_picture: uploadedHash,
         };
 
+        // Clear canvas immediately to show loading or new background
         const canvas = canvasRef.current;
         if (canvas) {
           const ctx = canvas.getContext("2d");
@@ -457,11 +460,15 @@ LIMIT 1`,
           }
         }
         setInfo(updatedInfo);
+        // setIsBannerUploading(false); // This will be set to false in the image load handler
+      } else {
+        setIsBannerUploading(false); // Hide loading if upload failed
       }
     } catch (error) {
       console.error("Error handling banner file change:", error);
+      setIsBannerUploading(false); // Hide loading on error
     } finally {
-      // setIsBannerUploading(false);
+      // The loading state is managed by the image.onload/onerror now
     }
   };
 
@@ -517,7 +524,8 @@ LIMIT 1`,
       <div
         className="w-full h-[50vh] relative flex flex-col items-center justify-center"
         style={{
-          backgroundColor: "#FDCCE9",
+          backgroundColor:
+            typeof info.back_picture === "string" ? "transparent" : "#FDCCE9",
         }}
       >
         <canvas
@@ -640,7 +648,10 @@ LIMIT 1`,
                   await db.query(
                     `UPDATE $auth.id SET username = "${newUsername}"`,
                   );
-                  if (paramId !== undefined && paramId !== info.id.id) {
+                  if (
+                    paramId !== undefined &&
+                    paramId !== String(info.id?.id)
+                  ) {
                     window.history.replaceState(
                       null,
                       "",
@@ -725,18 +736,23 @@ LIMIT 1`,
               <div key={String(item.id?.id)}>
                 <Prenda
                   user={info}
-                  auth={authInfo}
-                  item={item}
-                  onRemove={(item: Record) => {
+                  auth={authInfo as Record} // Cast authInfo to Record to satisfy prop type
+                  item={item as Record & { owner: RecordId<string> }} // Cast item to satisfy prop type
+                  onRemove={(itemToRemove: Record) => {
                     setClothingItems(
-                      clothingItems.filter((i) => i.id !== item.id),
+                      clothingItems.filter((i) => i.id !== itemToRemove.id),
                     );
                   }}
                   onChange={(before: Record, after: Record) => {
-                    const updatedItems = clothingItems.map((i) =>
-                      i.id === before.id ? after : i,
+                    const updatedItems = clothingItems.map(
+                      (i) =>
+                        i.id === before.id
+                          ? { ...after, owner: (after as any).owner || info.id }
+                          : i, // Preserve owner on update
                     );
-                    setClothingItems(updatedItems);
+                    setClothingItems(
+                      updatedItems as (Record & { owner: RecordId<string> })[],
+                    ); // Cast back
                   }}
                 />
               </div>
@@ -759,29 +775,32 @@ LIMIT 1`,
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
             </div>
           ) : wishedItems.length > 0 ? (
-            wishedItems.map((item) => (
-              <div key={String(item.id?.id)}>
-                <Prenda
-                  user={info}
-                  auth={authInfo}
-                  item={item}
-                  is_wished_item={true}
-                  onRemove={async (item: Record) => {
-                    try {
-                      await db.query(
-                        `SELECT * FROM ONLY fn::unwish(${String(item.id)}) LIMIT 1;`,
-                      );
-                      setWishedItems(
-                        wishedItems.filter((i) => i.id !== item.id),
-                      );
-                    } catch (error) {
-                      console.error("Error unwishing item:", error);
-                    }
-                  }}
-                  onChange={() => {}}
-                />
-              </div>
-            ))
+            wishedItems.map((item) => {
+              console.log("item:", item);
+              return (
+                <div key={String(item.id?.id)}>
+                  <Prenda
+                    user={info}
+                    auth={authInfo as Record}
+                    item={item}
+                    is_wished_item={true}
+                    onRemove={async (itemToRemove: Record) => {
+                      try {
+                        await db.query(
+                          `SELECT * FROM ONLY fn::unwish(${String(itemToRemove.id)}) LIMIT 1;`,
+                        );
+                        setWishedItems(
+                          wishedItems.filter((i) => i.id !== itemToRemove.id),
+                        );
+                      } catch (error) {
+                        console.error("Error unwishing item:", error);
+                      }
+                    }}
+                    onChange={() => {}}
+                  />
+                </div>
+              );
+            })
           ) : info?.wishlist_public === false && !is_user_profile ? (
             <div className="w-full text-center py-10 text-gray-500">
               Wishlist is private.

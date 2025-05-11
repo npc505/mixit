@@ -6,4 +6,4 @@ export { login } from "./surreal/auth.ts";
 export { DbContext } from "./surreal/ctx.ts";
 
 type Record = { [x: string]: unknown; id: RecordId<string> };
-export type { Record };
+export type { Record, RecordId };
