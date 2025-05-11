@@ -26,6 +26,12 @@ DEFINE FIELD followers ON TABLE usuario VALUE <future> {
     FOR select FULL
 ;
 
+DEFINE FIELD wishlist_public ON usuario TYPE bool DEFAULT false
+    PERMISSIONS
+        FOR select WHERE wishlist_public = true OR id = $auth.id
+        FOR create, update WHERE id = $auth.id
+;
+
 DEFINE FIELD following ON TABLE usuario VALUE <future> {
     LET $res = (SELECT COUNT(->follows) FROM ONLY $this).count;
 

@@ -75,3 +75,15 @@ DEFINE FUNCTION fn::tag_something_with_str($something: record<prenda>|record<mix
 
     RETURN fn::tag_something($something, $ftag.id);
 };
+
+REMOVE FUNCTION IF EXISTS fn::wish;
+DEFINE FUNCTION fn::wish($something: record<prenda>|record<mixit>) {
+    RETURN RELATE ($auth.id)->wishes->$something CONTENT {
+        date: time::now(),
+    };
+};
+
+REMOVE FUNCTION IF EXISTS fn::unwish;
+DEFINE FUNCTION fn::unwish($something: record<prenda>|record<mixit>) {
+    RETURN DELETE ($auth.id)->wishes WHERE out = $something RETURN BEFORE;
+};
