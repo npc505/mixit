@@ -1,49 +1,21 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { DbContext } from "../surreal";
-import { Token } from "surrealdb";
-import Cookies from "js-cookie";
 
 function ProtectedRoute({ authScreen = false }: { authScreen?: boolean }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const db = useContext(DbContext);
+  const { db, auth } = useContext(DbContext);
+  const isAuth = auth !== undefined;
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = Cookies.get("jwt");
-      let authenticated = false;
-
-      if (token !== undefined) {
-        try {
-          await db.authenticate(token as Token);
-          const res = await db.info();
-          if (res?.id !== undefined && res?.id !== null) {
-            authenticated = true;
-          }
-        } catch (error) {
-          console.error("Authentication error:", error);
-          Cookies.remove("jwt");
-        }
-      }
-
-      setIsAuthenticated(authenticated);
-    };
-
-    checkAuth();
-  }, [db]);
-
-  if (isAuthenticated === null) {
+  if (db === undefined) {
     return <div></div>;
   }
 
-  if (isAuthenticated === true && authScreen === true) {
+  if (authScreen === true && isAuth) {
     return <Navigate to="/explore" />;
+  } else if (isAuth || authScreen) {
+    return <Outlet />;
   } else {
-    return isAuthenticated || authScreen ? (
-      <Outlet />
-    ) : (
-      <Navigate to="/login" />
-    );
+    return <Navigate to="/login" />;
   }
 }
 

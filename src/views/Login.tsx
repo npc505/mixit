@@ -10,7 +10,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [videoOpacity, setVideoOpacity] = useState("opacity-100");
   const [formOpacity, setFormOpacity] = useState("opacity-0");
-  const db = useContext(DbContext);
+  const { db } = useContext(DbContext);
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -4,26 +4,23 @@ import { motion } from "framer-motion";
 import { RecordId } from "surrealdb";
 
 function Prenda({
-  auth,
-  user,
   is_wished_item,
   item,
   onRemove,
   onChange,
 }: {
-  auth: Record;
-  user: Record;
   is_wished_item?: boolean;
   item: Record & { owner: RecordId<string> };
   onRemove?: (item: Record) => void;
   onChange?: (before: Record, after: Record) => void;
 }) {
-  const db = useContext(DbContext);
+  const { db, auth } = useContext(DbContext);
   const [isWished, setIsWished] = useState(is_wished_item ?? false);
 
   useEffect(() => {
     const checkWishStatus = async () => {
-      if (!db || !item || !item.id || !user || !user.id) return;
+      if (!db || !item || !item.id || auth === undefined) return;
+
       try {
         const result = await db.query(
           `SELECT id FROM ${auth.id}->wishes WHERE out = ${item.id} LIMIT 1`,
@@ -36,7 +33,7 @@ function Prenda({
     };
 
     checkWishStatus();
-  }, [db, item?.id, user?.id]); // Re-run effect if item or user changes
+  }, [auth, db, item, item.id]);
 
   const handleRemove = async () => {
     try {
@@ -77,8 +74,6 @@ function Prenda({
     }
   };
 
-  console.log(item);
-
   return (
     <motion.div
       layout
@@ -93,7 +88,7 @@ function Prenda({
         alt="Clothing item"
         className="h-40 w-32 object-contain"
       />
-      {auth.id.id === item.owner.id && (
+      {auth?.id.id === item.owner.id && (
         <div className="absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -135,7 +130,7 @@ function Prenda({
           </motion.button>
         </div>
       )}
-      {auth.id.id === item.owner.id && (
+      {auth?.id.id === item.owner.id && (
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -160,7 +155,7 @@ function Prenda({
           </motion.button>
         </div>
       )}
-      {auth.id.id !== item.owner.id && (
+      {auth?.id.id !== item.owner.id && (
         <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <motion.button
             whileTap={{ scale: 0.95 }}

@@ -19,9 +19,8 @@ function Closet() {
     (Record & { owner: RecordId<string> })[]
   >([]);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
-  const [authInfo, setAuthInfo] = useState<Record>();
 
-  const db = useContext(DbContext);
+  const { db, auth } = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,7 +34,7 @@ function Closet() {
     }
   }, [paramId]);
 
-  console.log(`Profile for ${id}`);
+  // console.log(`Profile for ${id}`);
 
   const [info, setInfo] = useState<undefined | Record>();
   const [isUploading, setIsUploading] = useState(false);
@@ -54,26 +53,6 @@ function Closet() {
       accessory: 6,
     };
   }, []);
-
-  useEffect(() => {
-    const fetchAuthInfo = async () => {
-      try {
-        const info = await db.info();
-
-        if (info === undefined) {
-          throw new Error("Authentication information could not be retrieved.");
-        }
-
-        setAuthInfo(info);
-      } catch (error) {
-        console.error("Failed to fetch auth info:", error);
-      }
-    };
-
-    if (authInfo === undefined) {
-      fetchAuthInfo();
-    }
-  }, [db, setAuthInfo, authInfo]);
 
   // Gracias a https://dvmhn07.medium.com/learn-to-detect-image-background-colors-in-react-using-html-canvas-8c2d9e527e7d
   // Basicamente tomamos N pixeles al azar, vemos qué intensidad tiene y después, con el
@@ -146,7 +125,7 @@ function Closet() {
             totalGreen = 0,
             totalBlue = 0;
 
-          console.log(width, height);
+          // console.log(width, height);
 
           for (let i = 0; i < numSamples; i++) {
             const centerWidth = width / 2;
@@ -171,11 +150,11 @@ function Closet() {
           const avgGreen = totalGreen / numSamples;
           const avgBlue = totalBlue / numSamples;
 
-          console.log("Average RGB:", avgRed, avgGreen, avgBlue);
+          // console.log("Average RGB:", avgRed, avgGreen, avgBlue);
 
           const percent = (avgRed + avgGreen + avgBlue) / (255 * 3);
           if (percent < 0.6) {
-            console.log("Image is dark");
+            // console.log("Image is dark");
             setImgColorKind("dark");
           } else {
             setImgColorKind("neutral");
@@ -230,19 +209,12 @@ LIMIT 1`,
               )) as Record[]
             )[1];
 
-        console.log(result);
-
         if (result !== undefined) {
           if (result.is_self === true) {
             setIsUserProfile(true);
           }
 
-          // if (result.back_picture !== undefined) {
-          //   setIsBannerUploading(true);
-          // }
-
           setInfo(result);
-          console.log("Fetched info");
         }
       } catch (error) {
         console.error("Failed to fetch info:", error);
@@ -298,13 +270,11 @@ LIMIT 1`,
         };
 
         if (prendas && prendas.prendas && Array.isArray(prendas.prendas)) {
-          console.log(prendas.prendas);
           const newItems = prendas.prendas as Record[];
-          // Add the owner field to each item
           const itemsWithOwner = newItems.map((item) => ({
             ...item,
-            owner: info.id, // The owner is the profile user
-          })) as (Record & { owner: RecordId<string> })[]; // Cast for type safety
+            owner: info.id,
+          })) as (Record & { owner: RecordId<string> })[];
           setClothingItems(itemsWithOwner);
 
           // Update the cache
@@ -731,12 +701,10 @@ LIMIT 1`,
             <div className="w-full flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
             </div>
-          ) : clothingItems.length > 0 ? (
+          ) : clothingItems.length > 0 && auth !== undefined ? (
             clothingItems.map((item) => (
               <div key={String(item.id?.id)}>
                 <Prenda
-                  user={info}
-                  auth={authInfo as Record} // Cast authInfo to Record to satisfy prop type
                   item={item as Record & { owner: RecordId<string> }} // Cast item to satisfy prop type
                   onRemove={(itemToRemove: Record) => {
                     setClothingItems(
@@ -774,14 +742,12 @@ LIMIT 1`,
             <div className="w-full flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black"></div>
             </div>
-          ) : wishedItems.length > 0 ? (
+          ) : wishedItems.length > 0 && auth !== undefined ? (
             wishedItems.map((item) => {
               console.log("item:", item);
               return (
                 <div key={String(item.id?.id)}>
                   <Prenda
-                    user={info}
-                    auth={authInfo as Record}
                     item={item}
                     is_wished_item={true}
                     onRemove={async (itemToRemove: Record) => {

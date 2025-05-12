@@ -11,7 +11,7 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const db = useContext(DbContext);
+  const { db } = useContext(DbContext);
   const navigate = useNavigate();
 
   const googleCallback = async (res: unknown) => {

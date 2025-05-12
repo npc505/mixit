@@ -6,7 +6,7 @@ import PrivacyToggle from "../components/PrivacyToggle";
 import { useNavigate } from "react-router-dom";
 
 function Upload() {
-  const db = useContext(DbContext);
+  const { db } = useContext(DbContext);
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);

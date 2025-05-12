@@ -13,24 +13,66 @@ import Closet from "./views/Profile";
 import ProtectedRoute from "./layout/ProtectedRoute";
 import { ConnectionStatus } from "surrealdb";
 import Upload from "./views/Upload";
+import ExploreGuest from "./views/ExploreGuest";
+import Cookies from "js-cookie";
+import { Record } from "./surreal";
 
 function App() {
-  const [client, setClient] = useState<Surreal | undefined>(undefined);
+  const [client, setClient] = useState<
+    { db: Surreal; auth: Record | undefined } | undefined
+  >(undefined);
+  const [isLoadingInitialAuth, setIsLoadingInitialAuth] = useState(true);
 
   useEffect(() => {
-    const initDB = async () => {
-      const db = await getDb();
-      setClient(db);
+    const initDBAndAuth = async () => {
+      setIsLoadingInitialAuth(true);
+
+      try {
+        const db = await getDb();
+        let authInfo: Record | undefined = undefined;
+
+        const jwt = Cookies.get("jwt");
+        if (jwt !== undefined) {
+          try {
+            await db.authenticate(jwt);
+            authInfo = await db.info();
+          } catch (e) {
+            // If authentication fails, remove the invalid JWT
+            console.error("Failed to authenticate with JWT:", e);
+            Cookies.remove("jwt");
+          }
+        } else {
+          console.log("No JWT found, user is not authenticated.");
+        }
+
+        setClient({ db, auth: authInfo });
+      } catch (error) {
+        console.error("Failed to initialize DB or check auth:", error);
+      } finally {
+        setIsLoadingInitialAuth(false);
+      }
     };
 
-    initDB();
+    initDBAndAuth();
   }, []);
 
-  if (client === undefined || client.status != ConnectionStatus.Connected) {
+  if (
+    isLoadingInitialAuth ||
+    client === undefined ||
+    client.db.status !== ConnectionStatus.Connected
+  ) {
     return (
       <Router>
         <Routes>
-          <Route element={<MainLayout />}>/* TODO: Animated loading */</Route>
+          <Route
+            path="*"
+            element={
+              <MainLayout>
+                <div>Loading...</div>
+              </MainLayout>
+            }
+          />{" "}
+          {/* TODO: Animated loading */}
         </Routes>
       </Router>
     );
@@ -40,12 +82,18 @@ function App() {
     <DbContext.Provider value={client}>
       <Router>
         <Routes>
-          /* Public pages */
+          {/* Public pages */}
           <Route element={<MainLayout />}>
-            <Route path="/explore" element={<Explore />} />
+            <Route
+              path="/explore"
+              element={
+                client.auth !== undefined ? <Explore /> : <ExploreGuest />
+              }
+            />
             <Route path="/details" element={<Details />} />
           </Route>
           /* Private pages (require sign in) */
+          {/* ProtectedRoute will check client.auth */}
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout pad4={false} />}>
               <Route path="/upload" element={<Upload />} />
@@ -56,7 +104,8 @@ function App() {
               <Route path="/moodboard" element={<Moodboard />} />
             </Route>
           </Route>
-          /* Register pages, redirect to /explore when ready */
+          /* Authentication pages, redirect if authenticated */
+          {/* ProtectedRoute with authScreen={true} will check client.auth */}
           <Route element={<ProtectedRoute authScreen={true} />}>
             <Route element={<MainLayout pad4={false} />}>
               <Route path="/" element={<LandingPage />} />
