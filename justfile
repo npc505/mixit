@@ -5,8 +5,8 @@ start-imgdb:
     mkdir --parents /tmp/db
     cd imgdb && cargo run --release
 
-start-surreal:
-    surreal start --strict --deny-guests --no-identification-headers -b '[::]:9999' -A -u root -p root --log info --no-banner --query-timeout 10s
+start-surreal db_path='':
+    surreal start {{ if db_path != '' { 'file:' + db_path } else { '' } }} --strict --deny-guests --no-identification-headers -b '[::]:9999' -A -u root -p root --log info --no-banner --query-timeout 10s
 
 run:
     zellij --layout .zellij/services.kdl
