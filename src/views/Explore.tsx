@@ -26,16 +26,24 @@ const Explore = () => {
         try {
           const result = (
             (await db.query(`
-            SELECT VALUE uploaded
-            FROM ONLY (
-              SELECT ->follows->usuario->sube->prenda.* AS uploaded
-              FROM ONLY $auth.id
-              FETCH uploaded
-            )
+              SELECT VALUE array::flatten(uploaded->sube->prenda)
+              FROM ONLY (
+                SELECT array::distinct(array::flatten(
+                    array::filter(array::concat(
+                        next.id, -- Para los usuarios que seguimos
+                        array::flatten(next.next.id), -- Y los que estos siguen
+                        array::flatten(array::flatten(next.next.next.id)), -- Y a los que estos siguen
+                    ), |$v| $v != (${auth.id.toString()})->sube->prenda.owner
+                ))) AS uploaded FROM ONLY (${auth.id.toString()}).{..4}.{
+                    id,                                    -- Obtener el id de la persona
+                    sube: <->sube->prenda, -- Y obtener las prendas subidas
+                    next: <->follows<->usuario.@,
+                } -- FETCH uploaded.prenda
+              )  FETCH prenda
           `)) as Record[][]
           )[0]; // Pass auth ID if needed by $auth.id
 
-          console.log(result);
+          console.log("recomended", result);
 
           if (result && result.length > 0) {
             setPrendaItems(result); // Handle potential null/undefined result
