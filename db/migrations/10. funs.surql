@@ -1,3 +1,14 @@
+REMOVE FUNCTION IF EXISTS fn::log;
+DEFINE FUNCTION fn::log($arg1: any, $arg2: any) {
+    RETURN function($arg1, $arg2) {
+        let args = [...arguments];
+        let lastArg = (args.findLastIndex(_ => _ !== undefined) + 1) || 0;
+
+        console.log(args[0], JSON.stringify(args[1]));
+        return true;
+    }
+};
+
 REMOVE FUNCTION IF EXISTS fn::search_by_username;
 DEFINE FUNCTION fn::search_by_username($username: string) {
     IF (RETURN type::thing("usuario", $username) FETCH usuario) != NONE {
@@ -60,7 +71,7 @@ DEFINE FUNCTION fn::tag_something($something: record<prenda>|record<mixit>, $tag
         tags += $tag;
 
     RETURN $relation;
-};
+} PERMISSIONS FULL;
 
 REMOVE FUNCTION IF EXISTS fn::tag_something_with_str;
 DEFINE FUNCTION fn::tag_something_with_str($something: record<prenda>|record<mixit>, $tag_str: string) {
@@ -68,13 +79,14 @@ DEFINE FUNCTION fn::tag_something_with_str($something: record<prenda>|record<mix
 
     LET $ftag = IF $tag == none {
         LET $new_tag = CREATE tag CONTENT { nombre: $tag_str };
+        fn::log("Creating new tag:", $new_tag);
         $new_tag[0]
     } ELSE {
         $tag
     };
 
     RETURN fn::tag_something($something, $ftag.id);
-};
+} PERMISSIONS FULL;
 
 REMOVE FUNCTION IF EXISTS fn::wish;
 DEFINE FUNCTION fn::wish($something: record<prenda>|record<mixit>) {

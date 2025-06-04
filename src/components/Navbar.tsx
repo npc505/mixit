@@ -9,8 +9,8 @@ const Navbar = () => {
           <p className="text-3xl font-bold">MIXIT</p>
         </a>
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-          <button
-            type="button"
+          <a
+            href="/mixit"
             className="text-black border-2 border-solid-black bg-white hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-2 text-center flex flex-row justify-center items-center group"
           >
             MIXI{" "}
@@ -19,7 +19,7 @@ const Navbar = () => {
               alt=""
               className="w-10 pl-2 group-hover:filter group-hover:invert"
             />
-          </button>
+          </a>
           <button
             data-collapse-toggle="navbar-cta"
             type="button"

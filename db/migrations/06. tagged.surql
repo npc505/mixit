@@ -12,7 +12,7 @@ DEFINE TABLE tagged TYPE RELATION IN tag OUT prenda|mixit ENFORCED SCHEMAFULL
 DEFINE FIELD date ON tagged TYPE datetime READONLY
     PERMISSIONS
         FOR select WHERE out.owner = $auth.id OR out.public = true
-        FOR create, delete, update WHERE out.owner = $auth.id
+        FOR create, update WHERE out.owner = $auth.id
 ;
 
 REMOVE INDEX IF EXISTS unique_tagged ON tagged;

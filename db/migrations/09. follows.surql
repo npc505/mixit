@@ -5,7 +5,7 @@ DEFINE TABLE follows TYPE RELATION IN usuario OUT usuario ENFORCED SCHEMAFULL
         -- notes: for anyone to count the followers of any other person the
         -- relation "follows" needs to be public, visible
         FOR select FULL
-        FOR create, update, delete WHERE in = $auth.id
+        FOR create, update WHERE in = $auth.id
 ;
 
 -- ------------------------------
@@ -14,7 +14,7 @@ DEFINE TABLE follows TYPE RELATION IN usuario OUT usuario ENFORCED SCHEMAFULL
 
 DEFINE FIELD date ON follows TYPE datetime READONLY
     PERMISSIONS
-        FOR create, delete, update, select WHERE in = $auth.id
+        FOR create, update, select WHERE in = $auth.id
 ;
 
 REMOVE INDEX IF EXISTS unique_follows ON follows;

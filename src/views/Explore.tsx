@@ -78,11 +78,13 @@ const Explore = () => {
           )}
           {!isLoading &&
             auth !== undefined &&
-            error !== undefined &&
+            error === undefined &&
             prendaItems.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="flex overflow-x-auto p-4">
                 {prendaItems.map((item) => (
-                  <Prenda key={item.id.id} item={item} />
+                  <div key={item.id.id}>
+                    <Prenda item={item} />
+                  </div>
                 ))}
               </div>
             )}

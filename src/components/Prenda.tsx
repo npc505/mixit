@@ -16,6 +16,7 @@ function Prenda({
 }) {
   const { db, auth } = useContext(DbContext);
   const [isWished, setIsWished] = useState(is_wished_item ?? false);
+  console.log(item);
 
   useEffect(() => {
     const checkWishStatus = async () => {

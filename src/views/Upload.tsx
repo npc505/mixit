@@ -77,10 +77,13 @@ function Upload() {
       console.log(createPrendaResult);
 
       // Get the ID of the newly created prenda
-      const prendaId = createPrendaResult[0].id;
+      const prendaId = createPrendaResult[0].id.toString();
 
       // Tag the prenda with each tag
       for (const tag of tags) {
+        console.log(
+          `SELECT * FROM fn::tag_something_with_str(${prendaId}, "${tag}");`,
+        );
         try {
           await db.query(
             `SELECT * FROM fn::tag_something_with_str(${prendaId}, "${tag}");`,

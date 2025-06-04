@@ -6,7 +6,7 @@ start-imgdb:
     cd imgdb && cargo run --release
 
 start-surreal:
-    surreal start --strict --deny-scripting --deny-guests --no-identification-headers -b '[::]:9999' -A -u root -p root --log debug --no-banner --query-timeout 10s
+    surreal start --strict --deny-guests --no-identification-headers -b '[::]:9999' -A -u root -p root --log info --no-banner --query-timeout 10s
 
 run:
     zellij --layout .zellij/services.kdl

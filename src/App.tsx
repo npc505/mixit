@@ -16,6 +16,7 @@ import Upload from "./views/Upload";
 import ExploreGuest from "./views/ExploreGuest";
 import Cookies from "js-cookie";
 import { Record } from "./surreal";
+import Mixit from "./views/Mixit";
 
 function App() {
   const [client, setClient] = useState<
@@ -99,6 +100,7 @@ function App() {
               <Route path="/upload" element={<Upload />} />
               <Route path="/closet" element={<Closet />} />
               <Route path="/closet/:id" element={<Closet />} />
+              <Route path="/mixit" element={<Mixit />} />
             </Route>
             <Route element={<MainLayout />}>
               <Route path="/moodboard" element={<Moodboard />} />
