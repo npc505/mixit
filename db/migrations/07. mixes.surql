@@ -1,7 +1,7 @@
 REMOVE TABLE IF EXISTS mixes;
 DEFINE TABLE mixes TYPE RELATION IN prenda OUT mixit ENFORCED SCHEMAFULL
     PERMISSIONS
-        FOR create, update WHERE out.owner = $auth.id
+        FOR create, update, delete WHERE out.owner = $auth.id
         FOR select WHERE out.public = true OR out.owner = $auth.id
 ;
 

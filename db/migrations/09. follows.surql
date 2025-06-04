@@ -5,7 +5,7 @@ DEFINE TABLE follows TYPE RELATION IN usuario OUT usuario ENFORCED SCHEMAFULL
         -- notes: for anyone to count the followers of any other person the
         -- relation "follows" needs to be public, visible
         FOR select FULL
-        FOR create, update WHERE in = $auth.id
+        FOR create, update, delete WHERE in = $auth.id
 ;
 
 -- ------------------------------

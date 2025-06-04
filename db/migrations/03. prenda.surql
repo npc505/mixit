@@ -2,7 +2,7 @@ REMOVE TABLE IF EXISTS prenda;
 DEFINE TABLE prenda TYPE NORMAL SCHEMAFULL
     PERMISSIONS
         FOR select WHERE public = true OR owner = $auth.id
-        FOR create, update WHERE owner = $auth.id
+        FOR create, update, delete WHERE owner = $auth.id
 ;
 
 -- ------------------------------

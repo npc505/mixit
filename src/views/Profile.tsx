@@ -461,18 +461,21 @@ LIMIT 1`,
           setInfo(updatedInfo);
         }
       } else {
-        await db.query(
+        const [res] = (await db.query(
           `SELECT * FROM ONLY fn::unfollow(fn::search_by_username("${id}")) LIMIT 1;`,
-        );
-        const updatedInfo = {
-          ...info,
-          relation: undefined,
-          followers: Math.max(
-            0,
-            (typeof info.followers === "number" ? info.followers : 0) - 1,
-          ),
-        };
-        setInfo(updatedInfo);
+        )) as Record[];
+
+        if (res !== undefined && res !== null) {
+          const updatedInfo = {
+            ...info,
+            relation: undefined,
+            followers: Math.max(
+              0,
+              (typeof info.followers === "number" ? info.followers : 0) - 1,
+            ),
+          };
+          setInfo(updatedInfo);
+        }
       }
     } catch (error) {
       console.error("Error following user:", error);

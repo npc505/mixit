@@ -2,7 +2,7 @@ REMOVE TABLE IF EXISTS mixit;
 DEFINE TABLE mixit TYPE NORMAL SCHEMAFULL
     PERMISSIONS
         FOR select WHERE public = true OR owner.id = $auth.id
-        FOR create, update WHERE owner.id = $auth.id
+        FOR create, update, delete WHERE owner.id = $auth.id
 ;
 
 -- ------------------------------

@@ -2,6 +2,7 @@ REMOVE TABLE IF EXISTS tag;
 DEFINE TABLE tag TYPE NORMAL SCHEMAFULL
     PERMISSIONS
         FOR create, update, select FULL
+        FOR delete NONE
 ;
 
 DEFINE FIELD nombre ON TABLE tag TYPE string

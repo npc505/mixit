@@ -1,7 +1,7 @@
 REMOVE TABLE IF EXISTS usuario;
 DEFINE TABLE usuario TYPE NORMAL SCHEMAFULL
     PERMISSIONS
-        FOR create, update WHERE id = $auth.id
+        FOR create, update, delete WHERE id = $auth.id
         FOR select FULL
 ;
 
