@@ -2,9 +2,16 @@ import { useContext, useEffect, useState, useRef, useMemo } from "react";
 import { DbContext, Record, RecordId } from "../surreal";
 import uploadFile from "../files/upload";
 import TabGrid from "../components/TabGrid";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Prenda from "../components/Prenda";
+
+// Define a type for the user details to display in the lists
+interface UserProfileLite {
+  id: RecordId<string>;
+  username: string;
+  profile_picture?: string;
+}
 
 function Closet() {
   const [activeTab, setActiveTab] = useState("all");
@@ -20,11 +27,20 @@ function Closet() {
   >([]);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
 
+  // State for modals and lists
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [followersList, setFollowersList] = useState<UserProfileLite[]>([]);
+  const [followingList, setFollowingList] = useState<UserProfileLite[]>([]);
+  const [isFollowersLoading, setIsFollowersLoading] = useState(false);
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+
   const { db, auth } = useContext(DbContext);
   const profilePicture_fileInputRef = useRef<HTMLInputElement>(null);
   const bannerImage_fileInputRef = useRef<HTMLInputElement>(null);
 
   const { id: paramId } = useParams<{ id?: string }>();
+  const navigate = useNavigate(); // Hook for navigation
   const id = paramId === undefined ? "$auth.username" : paramId;
 
   // We only set the state via a useEffect to avoid infinite re-renders
@@ -352,6 +368,97 @@ LIMIT 1`,
     fetchWishedItems();
   }, [db, info, id, is_user_profile]);
 
+  // Fetch followers
+  const fetchFollowers = async () => {
+    if (!info || !info.id || isFollowersLoading) return;
+
+    setIsFollowersLoading(true);
+    try {
+      const result = await db.query(
+        `
+        LET $id = ${
+          is_user_profile
+            ? info.id
+            : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
+                  type::thing("usuario", "${id}")
+              } ELSE {
+                  fn::search_by_username("${id}")
+              }`
+        };
+
+        SELECT VALUE sigue FROM ONLY (SELECT <-follows<-usuario AS sigue FROM ONLY $id) FETCH usuario`,
+      );
+      const users = Array.isArray(result[1]) ? result[1] : [];
+      setFollowersList(users as UserProfileLite[]);
+    } catch (error) {
+      console.error("Failed to fetch followers:", error);
+      setFollowersList([]);
+    } finally {
+      setIsFollowersLoading(false);
+    }
+  };
+
+  // Fetch following
+  const fetchFollowing = async () => {
+    if (!info || !info.id || isFollowingLoading) return;
+
+    setIsFollowingLoading(true);
+    try {
+      // SurrealQL to fetch users the current profile follows
+      const result = await db.query(
+        `
+        LET $id = ${
+          is_user_profile
+            ? info.id
+            : `IF (RETURN type::thing("usuario", "${id}") FETCH usuario) != NONE {
+                  type::thing("usuario", "${id}")
+              } ELSE {
+                  fn::search_by_username("${id}")
+              }`
+        };
+
+        SELECT VALUE sigue FROM ONLY (SELECT ->follows->usuario AS sigue FROM ONLY $id) FETCH usuario`,
+      );
+      const users = Array.isArray(result[1]) ? result[1] : [];
+      setFollowingList(users as UserProfileLite[]);
+    } catch (error) {
+      console.error("Failed to fetch following:", error);
+      setFollowingList([]);
+    } finally {
+      setIsFollowingLoading(false);
+    }
+  };
+
+  const openFollowersModal = () => {
+    setShowFollowersModal(true);
+    fetchFollowers(); // Fetch list when modal opens
+  };
+
+  const closeFollowersModal = () => {
+    setShowFollowersModal(false);
+    setFollowersList([]); // Clear list when closing
+  };
+
+  const openFollowingModal = () => {
+    setShowFollowingModal(true);
+    fetchFollowing(); // Fetch list when modal opens
+  };
+
+  const closeFollowingModal = () => {
+    setShowFollowingModal(false);
+    setFollowingList([]); // Clear list when closing
+  };
+
+  const handleNavigateToUserCloset = (username: string) => {
+    if (username) {
+      closeFollowersModal();
+      closeFollowingModal();
+      // Navigate to the user's closet page using their ID
+      navigate(`/closet/${username}`);
+      // Close any open modals
+    }
+  };
+
   if (info === undefined) {
     return null;
   }
@@ -491,6 +598,73 @@ LIMIT 1`,
     { id: "bag", label: "Bags" },
     { id: "accessory", label: "Accessories" },
   ];
+
+  // Simple Modal Component (can be extracted if needed)
+  const Modal = ({
+    children,
+    title,
+    onClose,
+  }: {
+    children: React.ReactNode;
+    title: string;
+    onClose: () => void;
+  }) => {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-xl w-11/12 md:w-1/3 max-h-[80vh] flex flex-col">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="p-4 overflow-y-auto flex-grow">{children}</div>
+        </div>
+      </div>
+    );
+  };
+
+  // Component to render a user item in the lists
+  const UserListItem = ({ user }: { user: UserProfileLite }) => {
+    console.log(user);
+    return (
+      <div
+        className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded-md px-2 transition-colors"
+        onClick={() => handleNavigateToUserCloset(user.username)}
+      >
+        <div className="w-10 h-10 rounded-full mr-3 flex-shrink-0 overflow-hidden bg-gray-200">
+          {user.profile_picture ? (
+            <img
+              src={`${import.meta.env.VITE_IMG_SERVICE_URI}/${user.profile_picture}`}
+              alt={`${user.username}'s profile picture`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs"></div>
+          )}
+        </div>
+        <span className="font-semibold text-gray-800">
+          {user.username ?? "Unknown User"}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -656,13 +830,19 @@ LIMIT 1`,
           />
         </div>
         <div className="flex flex-row mt-4 space-x-6 z-10">
-          <div className={`flex flex-col items-center ${textColor}`}>
+          <div
+            className={`flex flex-col items-center ${textColor} cursor-pointer`}
+            onClick={openFollowersModal}
+          >
             <span className="text-xl font-bold">
               {typeof info.followers === "number" ? info.followers : 0}
             </span>
             <span className="text-sm">Followers</span>
           </div>
-          <div className={`flex flex-col items-center ${textColor}`}>
+          <div
+            className={`flex flex-col items-center ${textColor} cursor-pointer`}
+            onClick={openFollowingModal}
+          >
             <span className="text-xl font-bold">
               {typeof info.following === "number" ? info.following : 0}
             </span>
@@ -781,6 +961,44 @@ LIMIT 1`,
           )}
         </div>
       </div>
+
+      {/* Followers Modal */}
+      {showFollowersModal && (
+        <Modal title="Followers" onClose={closeFollowersModal}>
+          {isFollowersLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
+            </div>
+          ) : followersList.length > 0 ? (
+            followersList.map((user) => (
+              <div key={user.id}>
+                <UserListItem user={user} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500">No followers found.</div>
+          )}
+        </Modal>
+      )}
+
+      {/* Following Modal */}
+      {showFollowingModal && (
+        <Modal title="Following" onClose={closeFollowingModal}>
+          {isFollowingLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
+            </div>
+          ) : followingList.length > 0 ? (
+            followingList.map((user) => (
+              <UserListItem key={String(user.id)} user={user} />
+            ))
+          ) : (
+            <div className="text-center text-gray-500">
+              Not following anyone.
+            </div>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

@@ -25,8 +25,6 @@ function Prenda({
     profilePictureUrl: string | null;
   } | null>(null);
 
-  console.log(item);
-
   useEffect(() => {
     const checkWishStatus = async () => {
       if (!db || !item || !item.id || auth === undefined) return;
@@ -147,8 +145,6 @@ function Prenda({
   const imageUrl = item.image_url
     ? `${import.meta.env.VITE_IMG_SERVICE_URI}/${item.image_url}`
     : "";
-
-  console.log("prenda", item);
 
   return (
     <>

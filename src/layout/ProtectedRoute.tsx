@@ -11,7 +11,7 @@ function ProtectedRoute({ authScreen = false }: { authScreen?: boolean }) {
   }
 
   if (authScreen === true && isAuth) {
-    return <Navigate to="/explore" />;
+    return <Navigate to="/closet" />;
   } else if (isAuth || authScreen) {
     return <Outlet />;
   } else {
